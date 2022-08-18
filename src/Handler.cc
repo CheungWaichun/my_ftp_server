@@ -11,10 +11,12 @@ Handler::~Handler(){
 
 int Handler::set_user(User* user){
     this->user = user;
+    return 0;
 }
 
 int Handler::set_stream(ACE_SOCK_Stream stream){
     this->stream = stream;
+    return 0;
 }
 
 // int Handler::register_read(){
@@ -23,11 +25,12 @@ int Handler::set_stream(ACE_SOCK_Stream stream){
 
 int Handler::handle_input(ACE_HANDLE){
     this->stream.recv_n(data, 12);
-    // printf("hi");
+    printf("hi");
     ACE_DEBUG((LM_DEBUG, "%s\n", data));
     //命令处理逻辑
     // printf("hi");
     ACE_DEBUG((LM_DEBUG,ACE_TEXT("i am command handler!Waiting to be implemented!\n")));
+    std::cout<<"i am command handler!Waiting to be implemented!\n"<<std::endl;
 
     return 0;
 }
