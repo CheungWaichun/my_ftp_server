@@ -4,6 +4,7 @@
 // using namespace std;
 int main(int argc, char* argv[]){
     if(argc < 3){
+        std::cout<<"enter ip and port !!!"<<std::endl;
         ACE_OS::exit(1);
     }
     ACE_INET_Addr addr(((std::string)argv[1] + ":" + argv[2]).c_str());

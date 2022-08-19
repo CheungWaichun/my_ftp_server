@@ -24,14 +24,23 @@ int Handler::set_stream(ACE_SOCK_Stream stream){
 // }
 
 int Handler::handle_input(ACE_HANDLE){
-    this->stream.recv_n(data, 12);
-    printf("hi");
+    // std::cout<<"handle_input called"<<std::endl;
+    memset(data, 0, 128);
+    int count = this->stream.recv(data, 128);
     ACE_DEBUG((LM_DEBUG, "%s\n", data));
-    //命令处理逻辑
-    // printf("hi");
-    ACE_DEBUG((LM_DEBUG,ACE_TEXT("i am command handler!Waiting to be implemented!\n")));
-    std::cout<<"i am command handler!Waiting to be implemented!\n"<<std::endl;
+    std::cout<<"data is:"<<data<<std::endl;
+    
 
+    //命令处理逻辑
+    // ACE_DEBUG((LM_DEBUG,ACE_TEXT("i am command handler!Waiting to be implemented!\n")));
+    // std::cout<<"i am command handler!Waiting to be implemented!\n"<<std::endl;
+    Command* cmd = new Command(data, this->user);
+    std::string ret = cmd->handle();
+    std::cout<<"ret is:" << ret<<std::endl;
+    // this->stream.send("331 OK.\n", 10);
+    // std::cout<<"ret size is:"<<ret.size()<<std::endl;
+    this->stream.send(ret.c_str(), ret.length());
+    ret.clear();
     return 0;
 }
 

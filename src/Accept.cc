@@ -17,16 +17,14 @@ int Acceptor::handle_input(ACE_HANDLE){
     Handler *eh = new Handler();
     // ACE_INET_Addr client_addr;
     this->acceptor.accept(eh->get_stream(), 0, 0, 1);
-    std::cout<<"accept"<<std::endl;
-    
+
     User *user = new User();
     eh->set_user(user);
 
     ACE_Reactor::instance()->register_handler(eh,ACE_Event_Handler::READ_MASK);
 
-    eh->get_stream().send("220 Service ready for new user.\n",100);
-    printf("connected");
-    std::cout<<"accept"<<std::endl;
+    eh->get_stream().send("220 Service ready for new user.\n",32);
+    // std::cout<<"handle_input"<<std::endl;
 
     return -1;
 }

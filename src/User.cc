@@ -10,3 +10,11 @@ User::User(){
 User::~User(){
 
 }
+
+std::string User::get_name(){
+    return this->name;
+}
+
+std::string User::get_password(){
+    return this->password;
+}

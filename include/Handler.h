@@ -7,6 +7,7 @@
 #include "User.h"
 #include "ace/SOCK_Stream.h"
 #include "ace/Log_Msg.h"
+#include "Command.h"
 
 class Handler:public ACE_Event_Handler{
 public:
@@ -26,7 +27,7 @@ public:
 private:
     User* user;
     ACE_SOCK_Stream stream;
-    char data[12];
+    char data[128];
 
 
 };

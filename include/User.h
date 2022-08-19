@@ -10,6 +10,8 @@ class User{
 public:
     User();
     ~User();
+    std::string get_name();
+    std::string get_password();
 
 
 
