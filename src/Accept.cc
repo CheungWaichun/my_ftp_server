@@ -2,10 +2,11 @@
 #include <iostream>
 Acceptor::Acceptor(ACE_INET_Addr &addr){
     this->open(addr);
+    std::cout<<"i am a new acceptor."<<std::endl;
 }
 
 Acceptor::~Acceptor(){
-
+    std::cout<<"i am an acceptor.i am dying."<<std::endl;
 }
 
 int Acceptor::open(ACE_INET_Addr &addr){

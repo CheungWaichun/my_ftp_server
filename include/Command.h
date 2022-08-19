@@ -12,19 +12,21 @@ class Command{
 public:
     Command(std::string, User*);
     ~Command();
-    std::string handle();
+    std::pair<int, std::string> handle();
 
 
 private:
     std::string com;
     User* user;
     std::string ret;
-    enum COM_TYPE {USER, PASS, LIST, SYST};
+    int stat = 0;//waiting connection
+    enum COM_TYPE {USER=1, PASS, LIST, SYST, QUIT};
     std::unordered_map<std::string, COM_TYPE> com_map = {
         {"USER", USER},
         {"PASS", PASS},
         {"LIST", LIST},
-        {"SYST", SYST}
+        {"SYST", SYST},
+        {"QUIT", QUIT}
     
     
     };
@@ -36,6 +38,8 @@ private:
     int cmd_list(std::string);
 
     int cmd_syst(std::string);
+
+    int cmd_quit();
 
     std::string construct_ret(int, std::string);
 

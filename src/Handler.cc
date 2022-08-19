@@ -35,12 +35,16 @@ int Handler::handle_input(ACE_HANDLE){
     // ACE_DEBUG((LM_DEBUG,ACE_TEXT("i am command handler!Waiting to be implemented!\n")));
     // std::cout<<"i am command handler!Waiting to be implemented!\n"<<std::endl;
     Command* cmd = new Command(data, this->user);
-    std::string ret = cmd->handle();
+    std::pair<int, std::string> pr = cmd->handle();
+    int stat = pr.first;
+    std::string ret = pr.second;
     std::cout<<"ret is:" << ret<<std::endl;
     // this->stream.send("331 OK.\n", 10);
     // std::cout<<"ret size is:"<<ret.size()<<std::endl;
     this->stream.send(ret.c_str(), ret.length());
-    ret.clear();
+    if(stat == -1){
+        this->stream.close();
+    }
     return 0;
 }
 

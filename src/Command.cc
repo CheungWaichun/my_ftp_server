@@ -9,38 +9,48 @@ Command::~Command(){
 
 }
 
-std::string Command::handle(){
+std::pair<int, std::string> Command::handle(){
     int space = com.find(' ');
     std::string head = com.substr(0, space);
-    std::cout<<"head is:"<<head<<std::endl;
-    std::string param = com.substr(space + 1);
-    param.erase(param.find('\r'));
-    std::cout<<"param is: "<<param<<std::endl;
-    switch (com_map[head])
-    {
-    case USER:
-        this->cmd_user(param);
-        break;
-    
-    case PASS:
-        this->cmd_pass(param);
-        break;
-
-
-    case LIST:
-        this->cmd_list(param);
-        break;
-
-    case SYST:
-        this->cmd_syst(param);
-        break;
-    default:
-        std::cout<<"default case."<<std::endl;
-        break;
+    std::string param = space != -1 ? com.substr(space + 1) : "";
+    // head.erase(head.find('\r'),2);
+    // param.erase(param.find('\r'),2);
+    while(head[head.length() - 1] == '\r' || head[head.length() - 1] == '\n'){
+        head = head.substr(0, head.length() - 1);
     }
-    std::string rt = this->ret;
-    this->ret = "-1";
-    return rt;
+    while(param[param.length() - 1] == '\r' || param[param.length() - 1] == '\n'){
+        param = param.substr(0, param.length() - 1);
+    }
+    std::cout<<"head is:"<<head<<std::endl;
+    std::cout<<"param is: "<<param<<std::endl;
+    std::cout<<"map result is:"<<com_map[head]<<std::endl;
+    switch (com_map[head]){
+        case USER:
+            this->cmd_user(param);
+            break;
+
+        case PASS:
+            this->cmd_pass(param);
+            break;
+
+        case LIST:
+            this->cmd_list(param);
+            break;
+
+        case SYST:
+            this->cmd_syst(param);
+            break;
+
+        case QUIT:
+            this->cmd_quit();
+            break;
+
+            
+        default:
+            std::cout<<"default case."<<std::endl;
+            break;
+    }
+    return std::pair<int, std::string>(this->stat, this->ret);
 }
 
 int Command::cmd_user(std::string param){
@@ -63,6 +73,7 @@ int Command::cmd_pass(std::string param){
     }else{
         ret = construct_ret(530, "wrong password!");
     }
+    this->stat = 1;//providing service
     return 0;
 }
 
@@ -72,6 +83,12 @@ int Command::cmd_list(std::string param){
 
 int Command::cmd_syst(std::string param){
     ret = construct_ret(215, "ubuntu.");
+    return 0;
+}
+
+int Command::cmd_quit(){
+    ret = construct_ret(221, "byebye.");
+    this->stat = -1;//shutdown
     return 0;
 }
 
