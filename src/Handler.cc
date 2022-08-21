@@ -23,7 +23,7 @@ int Handler::set_stream(ACE_SOCK_Stream stream){
 
 // }
 
-int Handler::handle_input(ACE_HANDLE){
+int Handler::handle_input(ACE_HANDLE fd){
     // std::cout<<"handle_input called"<<std::endl;
     memset(data, 0, 128);
     int count = this->stream.recv(data, 128);

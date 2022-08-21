@@ -14,7 +14,9 @@ public:
     ~Acceptor();
     //
     int open(ACE_INET_Addr &addr);
+
     int handle_input(ACE_HANDLE);
+    int handle_close(ACE_HANDLE);
 
     ACE_HANDLE get_handle() const;
     // int set_stream(ACE_SOCK_Stream& stream);

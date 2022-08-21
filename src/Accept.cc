@@ -14,7 +14,7 @@ int Acceptor::open(ACE_INET_Addr &addr){
     return 0;
 }
 
-int Acceptor::handle_input(ACE_HANDLE){
+int Acceptor::handle_input(ACE_HANDLE fd){
     Handler *eh = new Handler();
     // ACE_INET_Addr client_addr;
     this->acceptor.accept(eh->get_stream(), 0, 0, 1);
@@ -27,12 +27,18 @@ int Acceptor::handle_input(ACE_HANDLE){
     eh->get_stream().send("220 Service ready for new user.\n",32);
     // std::cout<<"handle_input"<<std::endl;
 
-    return -1;
+    return 0;
 }
 
 ACE_HANDLE Acceptor::get_handle() const{
     return this->acceptor.get_handle();
 }
+
+
+int Acceptor::handle_close(ACE_HANDLE fd){
+
+}
+
 
 
 // int Acceptor::set_stream(ACE_SOCK_Stream& stream){
