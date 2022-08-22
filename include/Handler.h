@@ -13,21 +13,21 @@ class Handler:public ACE_Event_Handler{
 public:
     Handler();
     ~Handler();
-    int set_user(User* user);
-    int set_stream(ACE_SOCK_Stream stream);
+    int set_user(User*);
+    int set_control_stream(ACE_SOCK_Stream);
     // int register_read();
     int handle_input(ACE_HANDLE);
     ACE_HANDLE get_handle() const;
     // ACE_SOCK_Stream &stream_i(){
     //     return this->stream_;
     // };
-    ACE_SOCK_Stream& get_stream();
+    ACE_SOCK_Stream& get_control_stream();
 
 
 private:
     User* user;
-    ACE_SOCK_Stream stream;
-    char data[128];
+    ACE_SOCK_Stream control_stream;
+    char command[128];
 
 
 };

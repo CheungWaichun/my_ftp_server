@@ -17,17 +17,17 @@ int Acceptor::open(ACE_INET_Addr &addr){
 int Acceptor::handle_input(ACE_HANDLE fd){
     Handler *eh = new Handler();
     // ACE_INET_Addr client_addr;
-    this->acceptor.accept(eh->get_stream(), 0, 0, 1);
+    this->acceptor.accept(eh->get_control_stream(), 0, 0, 1);
 
     User *user = new User();
     eh->set_user(user);
 
     ACE_Reactor::instance()->register_handler(eh,ACE_Event_Handler::READ_MASK);
 
-    eh->get_stream().send("220 Service ready for new user.\n",32);
+    eh->get_control_stream().send("220 Service ready for new user.\n",32);
     // std::cout<<"handle_input"<<std::endl;
 
-    return 0;
+    return 0;//0:keep listening; -1:suicide
 }
 
 ACE_HANDLE Acceptor::get_handle() const{
@@ -36,7 +36,7 @@ ACE_HANDLE Acceptor::get_handle() const{
 
 
 int Acceptor::handle_close(ACE_HANDLE fd){
-
+    return 0;
 }
 
 
