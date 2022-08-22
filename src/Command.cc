@@ -67,7 +67,7 @@ void Command::handle(){
 
 int Command::cmd_list(std::string param){
     FILE *fp;
-    std::string cmd = "ls";
+    std::string cmd = "ls -a " + this->user->get_current_dir();
     std::string data = "";
     if((fp = popen(cmd.c_str(), "r")) == NULL){
         std::cout << "error" << std::endl;

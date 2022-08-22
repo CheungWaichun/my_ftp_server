@@ -6,7 +6,7 @@
 #include "ace/INET_Addr.h"
 #include "ace/SOCK_Stream.h"
 #include "ace/SOCK_Connector.h"
-
+#include <iostream>
 
 class User{
 public:
@@ -14,6 +14,9 @@ public:
     ~User();
     std::string get_name();
     std::string get_password();
+    std::string get_current_dir(){
+        return this->current_dir;
+    }
 
     int set_client_data_addr(ACE_INET_Addr addr){
         this->client_data_conn_addr = addr;
@@ -61,6 +64,7 @@ public:
 private:
     std::string name;
     std::string password;
+    std::string current_dir;
     enum STAT{WAIT_NAME, WAIT_PASSWORD, LOGINED} login_stat;
     enum TRANS_TYPE{BINARY, ASCII} trans_type;//transfer type
 

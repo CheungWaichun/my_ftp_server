@@ -30,7 +30,7 @@ Because when ftp build a data connection, it exec PORT command first.
 2. after tranfer data through data stream(ACE_SOCK_Stream), how to tell client the data is over? 
 Answer: close the stream. client will keep waiting even if a '\n' is transferred.
 
-3. when using LIST command, client will send command:TYPE A, PORT xxx, LIST.So "WARNING:bare linefeeds received in ASCII mode" always here!
+3. when ordering LIST command after TYPE I Command, client will send command:TYPE A, PORT xxx, LIST.So "WARNING:bare linefeeds received in ASCII mode" always here!
 
 
 

@@ -6,6 +6,8 @@ User::User(){
     password = "123456";
     login_stat = WAIT_NAME;
     trans_type = ASCII;
+    current_dir = get_current_dir_name();
+    // std::cout<<current_dir<<std::endl;
 }
 
 User::~User(){

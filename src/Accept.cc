@@ -25,6 +25,7 @@ int Acceptor::handle_input(ACE_HANDLE fd){
     ACE_Reactor::instance()->register_handler(eh,ACE_Event_Handler::READ_MASK);
 
     eh->get_control_stream().send("220 Service ready for new user.\n",32);
+    
     // std::cout<<"handle_input"<<std::endl;
 
     return 0;//0:keep listening; -1:suicide
