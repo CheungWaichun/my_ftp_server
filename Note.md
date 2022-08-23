@@ -8,8 +8,9 @@
 ### Solution
 将ftp命令的enum类型的起始数字设为1（默认从0开始）。
 
-<br/>
-<br/>
+
+
+
 
 ## note
 <!-- main函数写成
@@ -23,56 +24,68 @@ while(1)
 ```
 的话server每次开机只能接受一次连接。原因应该是第一个Acceptor注销后，后面就没有新的Acceptor被创建（并register到ACE_Reactor上）用于新连接的处理了。 -->
 
+
+
 1. some func need data connection to transfer data back to client, before implement these func, impl PORT func first.
-Because when ftp build a data connection, it exec PORT command first.
+    Because when ftp build a data connection, it exec PORT command first.
+
+  
 
 
 2. after tranfer data through data stream(ACE_SOCK_Stream), how to tell client the data is over? 
-Answer: close the stream. client will keep waiting even if a '\n' is transferred.
+    Answer: close the stream. client will keep waiting even if a '\n' is transferred.
 
-3. when ordering LIST command after TYPE I Command, client will send command:TYPE A, PORT xxx, LIST.So "WARNING:bare linefeeds received in ASCII mode" always here!
+  
+
+3. when ordering LIST command after TYPE I Command, client will send command:TYPE A, PORT xxx, LIST.So "WARNING:bare linefeeds received in ASCII mode" always here! 
+Detailed reason shows below.(about CRLF)
+
+<img src=".\.Note_images\image-20220823102419717.png" alt="image-20220823102419717" style="zoom: 67%;" />
+
+After test, i know that the FILE which popen() method returns, each row ends with LF, not CRLF. When i modify it into CRLF, the warning is gone! The comment in the picture above is totally right.
 
 
 
 
-
-<br/>
 
 ## Adjust
 1. 
 move the right of sock_stream control from Handler to User. let Handler controlling stream makes the code tight coupling.
 
-<br/>
 
-2. 
-Before: use Handler to send control_msg back, Command return a std::string to Handler and Handler send it.
 
-disadvantage: every command could send control_msg only once(only at the end of the handle process).Some command need to send more than once, such as LIST:first->"ready to send data."; second->"sent completed!".
+2. **Before:** use Handler to send control_msg back, Command return a std::string to Handler and Handler send it.
 
-Solu: 
+**disadvantage:** every command could send control_msg only once(only at the end of the handle process).Some command need to send more than once, such as LIST:first->"ready to send data."; second->"sent completed!".
+
+**Solu:** 
+
 1. the process of sending control_msg moves inside the command handle process, controlled by class Command.
 
 2. write a Handler::send_control_msg() method, and set a Handler* ptr in class Command so that it can use Handler::send_control_msg() method. But i think it's not good to let class Command know about the existence of class Handler. it's unsafe and tight coupling.
 
-Now: choose Solu 1.
+**Now:** choose Solu 1.
 
 
-<br/>
+
 
 ### BUG1
 server could accept connection only once.After the first connection closed, server stuck, can't response to a new connection.
 
-<br/>
+
 
 
 ### SOLVE1
 let Acceptor::handle_input() return 0, not -1.
 
-<br/>
+
 
 
 
 #### Warning
-bare linefeeds received in ASCII mode
 
-Solu: set transfer type -> I (BINARY), through 'TYPE I' command in server, 'binary' command in client.
+1.  bare linefeeds received in ASCII mode
+
+Solu: 
+(1)set transfer type -> I (BINARY), through 'TYPE I' command in server, 'binary' command in client.(X)
+(2)see note 3.

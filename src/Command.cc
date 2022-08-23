@@ -15,6 +15,7 @@ void Command::handle(){
     std::string head = com.substr(0, space);
     std::string param = space != -1 ? com.substr(space + 1) : "";
 
+    //erase CR and LF 
     while(head[head.length() - 1] == '\r' || head[head.length() - 1] == '\n'){
         head = head.substr(0, head.length() - 1);
     }
@@ -53,6 +54,13 @@ void Command::handle(){
             this->cmd_type(param);
             break;
 
+        case CWD:
+            this->cmd_cwd(param);
+            break;
+
+        case PWD:
+            this->cmd_pwd();
+            break;
         
         default:
             std::cout<<"default case."<<std::endl;
@@ -63,7 +71,30 @@ void Command::handle(){
     return;
 }
 
-
+int Command::cmd_cwd(std::string& param){
+    std::string dir = "";
+    // redundant case
+    if(param.empty()){
+        dir = "/home";
+    }
+    else if(param[0] == '/'){
+        dir = param;
+    }
+    else{
+        dir = this->user->get_current_dir() + "/" + param;
+    }
+    if(ACE_OS::chdir(dir.c_str()) != 0){
+        this->user->send_control_msg(construct_ret(501, "not Exit."));
+        return -1;
+    }
+    //simplify dir
+    char buf[128] = {0};
+    ACE_OS::getcwd(buf, 128);
+    dir = buf;
+    this->user->send_control_msg(construct_ret(250, "dir changed to " + dir));
+    this->user->set_currrent_dir(dir);
+    return 0;
+}
 
 int Command::cmd_list(std::string param){
     FILE *fp;
@@ -77,6 +108,11 @@ int Command::cmd_list(std::string param){
 
         while(ACE_OS::fgets(row, sizeof(row), fp)){
             data += row;
+            // std::printf("the last two:%d,%d",data[data.length() - 2],data[data.length() - 1]);
+            // data = data.substr(0,data.length() - 1);
+            // data += "\r\n";
+
+
             // this->user->send_data_msg_buf(row, 1024);
             // ACE_OS::memset(row, 0, sizeof(row));
         }
@@ -84,6 +120,7 @@ int Command::cmd_list(std::string param){
     pclose(fp);
 
     // data += '\n';
+    // data += '\r';
 
     this->user->send_control_msg(construct_ret(125, "ready!"));
     this->user->send_data_msg(data);
@@ -115,6 +152,15 @@ int Command::cmd_port(std::string raw_addr){
     return 0;
 }
 
+int Command::cmd_pwd(){
+    char buf[128] = {0};
+    ACE_OS::getcwd(buf, 128);
+    std::string dir = buf;
+    this->user->send_control_msg(construct_ret(257, "current dir: " + dir));
+    this->user->set_currrent_dir(dir);
+    return 0;
+}
+
 int Command::cmd_quit(){
     this->user->send_control_msg(construct_ret(221, "byebye."));
 
@@ -127,7 +173,7 @@ int Command::cmd_syst(std::string param){
 }
 
 int Command::cmd_type(std::string param){
-    this->user->send_control_msg(construct_ret(220, "Type set to xxx."));
+    this->user->send_control_msg(construct_ret(200, "Type set to xxx."));
     return 0;
 }
 
