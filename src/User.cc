@@ -24,5 +24,6 @@ std::string User::get_password(){
 
 int User::init_data_stream(){
     this->connector.connect(data_stream, client_data_conn_addr);
+    std::cout<<"data_stream built."<<std::endl;
     return 0;
 }

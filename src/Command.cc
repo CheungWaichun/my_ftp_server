@@ -62,6 +62,18 @@ void Command::handle(){
             this->cmd_pwd();
             break;
         
+        case OPTS:
+            this->cmd_opts(param);
+            break;
+
+        case NLST:
+            this->cmd_nlst(param);
+            break;
+
+        case DELE:
+            this->cmd_dele(param);
+            break;
+
         default:
             std::cout<<"default case."<<std::endl;
             break;
@@ -72,27 +84,26 @@ void Command::handle(){
 }
 
 int Command::cmd_cwd(std::string& param){
-    std::string dir = "";
-    // redundant case
-    if(param.empty()){
-        dir = "/home";
-    }
-    else if(param[0] == '/'){
-        dir = param;
-    }
-    else{
-        dir = this->user->get_current_dir() + "/" + param;
-    }
-    if(ACE_OS::chdir(dir.c_str()) != 0){
-        this->user->send_control_msg(construct_ret(501, "not Exit."));
+    std::string dir = this->get_formal_dir(param);
+    if(dir.empty()){
+        this->user->send_control_msg(construct_ret(501, "not Exist."));
         return -1;
     }
-    //simplify dir
-    char buf[128] = {0};
-    ACE_OS::getcwd(buf, 128);
-    dir = buf;
+
     this->user->send_control_msg(construct_ret(250, "dir changed to " + dir));
     this->user->set_currrent_dir(dir);
+    return 0;
+}
+
+int Command::cmd_dele(std::string& param){
+    std::string dir = this->get_file_dir(param);
+    if(dir.empty()){
+        this->user->send_control_msg(construct_ret(550, "file not found."));
+        return -1;
+    }
+    std::string cmd = "rm -f " + dir;
+    ACE_OS::system(cmd.c_str());
+    this->user->send_control_msg(construct_ret(250, "file deleted."));
     return 0;
 }
 
@@ -131,6 +142,15 @@ int Command::cmd_list(std::string param){
     return 0;
 }
 
+int Command::cmd_nlst(std::string param){
+    return this->cmd_list(param);
+}
+
+int Command::cmd_opts(std::string param){
+    this->user->send_control_msg(construct_ret(200, "opts success."));
+    return 0;
+}
+
 int Command::cmd_pass(std::string param){
     std::cout<<"pass param is: "<< param<<std::endl;
     if(!param.compare(this->user->get_password())){
@@ -146,6 +166,9 @@ int Command::cmd_port(std::string raw_addr){
     //
     std::cout<<"raw_addr is:"<<raw_addr<<std::endl;
     ACE_INET_Addr addr = port_string_to_INET(raw_addr);
+    char buf[1024] = {0};
+    addr.addr_to_string(buf, 1024);
+    std::cout<<"addr is:" <<buf<<std::endl;
     this->user->set_client_data_addr(addr);
     this->user->init_data_stream();
     this->user->send_control_msg(construct_ret(200, "PORT set."));
@@ -194,17 +217,57 @@ std::string Command::construct_ret(int statcode, std::string descript){
     return std::to_string(statcode) + " " + descript + "\n";
 }
 
+std::string Command::get_file_dir(std::string& fd){
+
+}
+
+std::string Command::get_formal_dir(std::string& raw_dir){
+    std::string dir = "";
+
+    if(raw_dir.empty()){
+        dir = "/home";
+    }
+    else if(raw_dir[0] == '/'){
+        dir = raw_dir;
+    }
+    else{
+        dir = this->user->get_current_dir() + "/" + raw_dir;
+    }
+
+    std::string usr_dir = this->user->get_current_dir();
+    if(ACE_OS::chdir(dir.c_str()) != 0){
+        return "";
+    }
+    //simplify dir
+    char buf[128] = {0};
+    ACE_OS::getcwd(buf, 128);
+    dir = buf;
+    // restore 
+    ACE_OS::chdir(usr_dir.c_str());
+    return dir;
+}
+
 ACE_INET_Addr Command::port_string_to_INET(std::string port_addr){
     int last_comma = port_addr.find_last_of(',');
     int second_port = std::stoi(port_addr.substr(last_comma + 1));
-    std::cout<<"second port:"<<second_port<<std::endl;
+    // std::cout<<"second port:"<<second_port<<std::endl;
     port_addr = port_addr.substr(0, last_comma);
     int port_comma = port_addr.find_last_of(',');
     int first_port = std::stoi(port_addr.substr(port_comma + 1));
-    std::cout<<"first port:"<<first_port<<std::endl;
+    // std::cout<<"first port:"<<first_port<<std::endl;
     int port = first_port * 256 + second_port;
-    std::cout<<"port:"<<port<<std::endl;
+    // std::cout<<"port:"<<port<<std::endl;
     std::string ip = port_addr.substr(0, port_comma);
-    std::cout<<"ip:"<<ip<<std::endl;
-    return ACE_INET_Addr(port);
+    // std::cout<<"ip:"<<ip<<std::endl;
+    // get format ip address
+    int pos = -1;
+    while((pos = ip.find(',')) != -1){
+        ip.replace(pos, 1, ".");
+    }
+    // std::cout<<"format ip:"<<ip<<std::endl;
+    std::string full_addr = ip + ":" + std::to_string(port);
+
+    // std::cout<<"ip is:"<<addr.get_ip_address()<<std::endl;
+    // std::cout<<"port is:"<<addr.get_port_number()<<std::endl;
+    return (ACE_INET_Addr)full_addr.c_str();
 }

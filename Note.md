@@ -45,7 +45,7 @@ Detailed reason shows below.(about CRLF)
 After test, i know that the FILE which popen() method returns, each row ends with LF, not CRLF. When i modify it into CRLF, the warning is gone! The comment in the picture above is totally right.
 
 
-
+4. 客户端在 Windows 环境时，可能需要关闭系统防火墙，不然Connector::connect() 方法发出的连接请求会被过滤。
 
 
 ## Adjust
