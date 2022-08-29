@@ -192,8 +192,28 @@ int Command::cmd_pasv(){
     // choose a random port to listen to data connection
     ACE_OS::srand(time(NULL));
     int data_port = (ACE_OS::rand() % 10000) + 10000;
-    char buf[100] = {0};
-    std::string local_ip = ACE_INET_Addr().get_host_addr(buf, 100);
+    
+    // get host ip
+    std::string cmd = "hostname -I";
+    FILE* fp;
+    std::string output = "";
+    if((fp = popen(cmd.c_str(), "r")) == NULL){
+        std::cout << "command line error" << std::endl;
+    }else{
+        char row[1024];
+        while(ACE_OS::fgets(row, sizeof(row), fp)){
+            output += row;
+        }
+    }
+    pclose(fp);
+    
+    // erase '\n' and '\r'
+    while(!isdigit(output.back())){
+        output.erase(output.end() - 1);
+    }
+    std::cout<<"output is:"<<output<<std::endl;
+
+    std::string local_ip = output;
     std::string full_addr = local_ip + ":" + std::to_string(data_port);
     std::cout<<"full_addr is: "<<full_addr<<std::endl;
     ACE_INET_Addr addr = (ACE_INET_Addr)full_addr.c_str();
@@ -264,7 +284,13 @@ int Command::cmd_syst(std::string param){
 }
 
 int Command::cmd_type(std::string param){
-    this->user->send_control_msg(construct_ret(200, "Type set to xxx."));
+    if(param.compare("I") == 0){
+        user->send_control_msg(construct_ret(220, "Type set to binary."));
+    }else if(param.compare("A") == 0){
+        user->send_control_msg(construct_ret(220, "Type set to binary."));
+    }else{
+        user->send_control_msg(construct_ret(500, "what's this type?"));
+    }
     return 0;
 }
 
