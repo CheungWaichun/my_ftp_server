@@ -6,6 +6,7 @@
 #include "ace/INET_Addr.h"
 #include "ace/SOCK_Stream.h"
 #include "ace/SOCK_Connector.h"
+#include "ace/SOCK_Acceptor.h"
 #include <iostream>
 #include "ace/OS.h"
 
@@ -22,19 +23,30 @@ public:
     std::string get_current_dir(){
         return this->current_dir;
     }
-    int set_currrent_dir(std::string& dir){
-        this->current_dir = dir;
-        return 0;
+
+    ACE_INET_Addr& get_local_data_addr(){
+        return this->local_data_conn_addr;
     }
 
-    int set_client_data_addr(ACE_INET_Addr addr){
+    void set_currrent_dir(std::string& dir){
+        this->current_dir = dir;
+    }
+
+    void set_client_data_addr(ACE_INET_Addr& addr){
         this->client_data_conn_addr = addr;
-        return 0;
-    };
-    int set_client_control_addr(ACE_INET_Addr addr){
+    }
+
+    void set_client_control_addr(ACE_INET_Addr& addr){
         this->client_control_conn_addr = addr;
-        return 0;
-    };
+    }
+
+    void set_local_data_addr(ACE_INET_Addr& addr){
+        this->local_data_conn_addr = addr;
+    }
+
+    void set_passive(bool tf){
+        this->passive = tf;
+    }
 
 
 
@@ -70,6 +82,10 @@ public:
         return 0;
     }
 
+    int open_data_acceptor(ACE_INET_Addr& addr){
+        return this->data_acceptor.open(addr, 1);
+    }
+
 private:
     std::string name;
     std::string password;
@@ -77,13 +93,17 @@ private:
     std::string current_dir;
     enum STAT{WAIT_NAME, WAIT_PASSWORD, LOGINED} login_stat;
     enum TRANS_TYPE{BINARY, ASCII} trans_type;//transfer type
+    // passive mode
+    bool passive;
 
     ACE_INET_Addr client_data_conn_addr;
     ACE_SOCK_Stream data_stream;
     ACE_INET_Addr client_control_conn_addr;
     ACE_SOCK_Stream control_stream;
+    ACE_INET_Addr local_data_conn_addr;
 
     ACE_SOCK_Connector connector;
+    ACE_SOCK_Acceptor data_acceptor;
 };
 
 

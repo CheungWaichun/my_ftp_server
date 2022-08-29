@@ -2,22 +2,22 @@
 #include <iostream>
 Acceptor::Acceptor(ACE_INET_Addr &addr){
     this->open(addr);
-    std::cout<<"i am a new acceptor."<<std::endl;
+    std::cout<<"i am a new control_acceptor."<<std::endl;
 }
 
 Acceptor::~Acceptor(){
-    std::cout<<"i am an acceptor.i am dying."<<std::endl;
+    std::cout<<"i am an control_acceptor.i am dying."<<std::endl;
 }
 
 int Acceptor::open(ACE_INET_Addr &addr){
-    this->acceptor.open(addr);
+    this->control_acceptor.open(addr);
     return 0;
 }
 
 int Acceptor::handle_input(ACE_HANDLE fd){
     Handler *eh = new Handler();
     // ACE_INET_Addr client_addr;
-    this->acceptor.accept(eh->get_control_stream(), 0, 0, 1);
+    this->control_acceptor.accept(eh->get_control_stream(), 0, 0, 1);
 
     User *user = new User();
     eh->set_user(user);
@@ -32,7 +32,7 @@ int Acceptor::handle_input(ACE_HANDLE fd){
 }
 
 ACE_HANDLE Acceptor::get_handle() const{
-    return this->acceptor.get_handle();
+    return this->control_acceptor.get_handle();
 }
 
 

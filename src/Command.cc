@@ -74,6 +74,15 @@ void Command::handle(){
             this->cmd_dele(param);
             break;
 
+        case RMD:
+            this->cmd_rmd(param);
+            break;
+
+        case PASV:
+            this->cmd_pasv();
+            break;
+
+
         default:
             std::cout<<"default case."<<std::endl;
             break;
@@ -84,32 +93,47 @@ void Command::handle(){
 }
 
 int Command::cmd_cwd(std::string& param){
-    std::string dir = this->get_formal_dir(param);
-    if(dir.empty()){
+    std::string dir = this->get_formal_path(param);
+    if(dir.empty() || dir.back() != '/'){
         this->user->send_control_msg(construct_ret(501, "not Exist."));
         return -1;
     }
 
+    ACE_OS::chdir(dir.c_str());
     this->user->send_control_msg(construct_ret(250, "dir changed to " + dir));
+    // erase '/' at tail
+    dir.erase(dir.end() - 1);
     this->user->set_currrent_dir(dir);
     return 0;
 }
 
 int Command::cmd_dele(std::string& param){
-    std::string dir = this->get_file_dir(param);
-    if(dir.empty()){
+    std::string path = this->get_formal_path(param);
+    if(path.empty()){
         this->user->send_control_msg(construct_ret(550, "file not found."));
         return -1;
     }
-    std::string cmd = "rm -f " + dir;
+    if(path.back() == '/'){
+        this->user->send_control_msg(construct_ret(550, "not a file."));
+        return -1;
+    }
+    std::string cmd = "rm -f " + path;
+    std::cout<<"command is:"<<cmd<<std::endl;
     ACE_OS::system(cmd.c_str());
     this->user->send_control_msg(construct_ret(250, "file deleted."));
     return 0;
 }
 
 int Command::cmd_list(std::string param){
+    std::string path = get_formal_path(param);
+    if(!param.empty() && path.empty()){
+        std::cout<<"path not exist."<<std::endl;
+        this->user->send_control_msg(construct_ret(550, "path not exist."));
+        return -1;
+    }
     FILE *fp;
-    std::string cmd = "ls -a " + this->user->get_current_dir();
+    std::string cmd = "ls -a " + path;
+    std::cout<<"command is: "<<cmd<<std::endl;
     std::string data = "";
     if((fp = popen(cmd.c_str(), "r")) == NULL){
         std::cout << "error" << std::endl;
@@ -162,6 +186,33 @@ int Command::cmd_pass(std::string param){
     return 0;
 }
 
+int Command::cmd_pasv(){
+    this->user->set_passive(true);
+
+    // choose a random port to listen to data connection
+    ACE_OS::srand(time(NULL));
+    int data_port = (ACE_OS::rand() % 10000) + 10000;
+    char buf[100] = {0};
+    std::string local_ip = ACE_INET_Addr().get_host_addr(buf, 100);
+    std::string full_addr = local_ip + ":" + std::to_string(data_port);
+    std::cout<<"full_addr is: "<<full_addr<<std::endl;
+    ACE_INET_Addr addr = (ACE_INET_Addr)full_addr.c_str();
+    this->user->set_local_data_addr(addr);
+    this->user->open_data_acceptor(this->user->get_local_data_addr());
+
+    // replace '.' to ','
+    int index = -1;
+    while((index = local_ip.find('.')) != -1){
+        local_ip[index] = ',';
+    }
+    std::string port1 = std::to_string(data_port / 256);
+    std::string port2 = std::to_string(data_port % 256);
+    std::string msg = "Entering Passive Mode (" + local_ip + "," + port1 + "," + port2 + ").";
+    std::cout<<"msg is:"<<msg<<std::endl;
+    user->send_control_msg(construct_ret(227, msg));
+    return 0;
+}
+
 int Command::cmd_port(std::string raw_addr){
     //
     std::cout<<"raw_addr is:"<<raw_addr<<std::endl;
@@ -187,6 +238,23 @@ int Command::cmd_pwd(){
 int Command::cmd_quit(){
     this->user->send_control_msg(construct_ret(221, "byebye."));
 
+    return 0;
+}
+
+int Command::cmd_rmd(std::string& param){
+    std::string dir = get_formal_path(param);
+    if(dir.empty()){
+        user->send_control_msg(construct_ret(550, "dir not found."));
+        return -1;
+    }
+    if(dir.back() != '/'){
+        user->send_control_msg(construct_ret(550, "not a dir."));
+        return -1;
+    }
+    std::string cmd = "rm -rf " + dir;
+    std::cout<<"command is:"<<cmd<<std::endl;
+    ACE_OS::system(cmd.c_str());
+    user->send_control_msg(construct_ret(250, "dir removed."));
     return 0;
 }
 
@@ -217,34 +285,43 @@ std::string Command::construct_ret(int statcode, std::string descript){
     return std::to_string(statcode) + " " + descript + "\n";
 }
 
-std::string Command::get_file_dir(std::string& fd){
 
-}
-
-std::string Command::get_formal_dir(std::string& raw_dir){
-    std::string dir = "";
-
-    if(raw_dir.empty()){
-        dir = "/home";
-    }
-    else if(raw_dir[0] == '/'){
-        dir = raw_dir;
-    }
-    else{
-        dir = this->user->get_current_dir() + "/" + raw_dir;
-    }
-
-    std::string usr_dir = this->user->get_current_dir();
-    if(ACE_OS::chdir(dir.c_str()) != 0){
+std::string Command::get_formal_path(std::string& raw_path){
+    std::string path = "";
+    if(raw_path.empty()){
         return "";
     }
+    if(raw_path[0] == '/'){
+        path = raw_path;
+    }else{
+        path = this->user->get_current_dir() + "/" + raw_path;
+    }
+    std::cout<<"full path:"<<path<<std::endl;
+    // erase '/' at the tail
+    // while(path.back() == '/'){
+    //     path.erase(path.end() - 1);
+    // }
+    std::cout<<"access"<<std::endl;
+    // file of dir not exist, return ""
+    if(ACE_OS::access(path.c_str(), 0) == -1){
+        return "";
+    }
+    std::cout<<"opendir"<<std::endl;
+    // file path (not simplified)
+    if(ACE_OS::opendir(path.c_str()) == NULL){
+        return path;
+    }
     //simplify dir
+    std::string usr_dir = this->user->get_current_dir();
+    ACE_OS::chdir(path.c_str());
     char buf[128] = {0};
     ACE_OS::getcwd(buf, 128);
-    dir = buf;
+    path = buf;
+    path.push_back('/');
     // restore 
     ACE_OS::chdir(usr_dir.c_str());
-    return dir;
+    std::cout<<"formal path is: "<<path<<std::endl;
+    return path;
 }
 
 ACE_INET_Addr Command::port_string_to_INET(std::string port_addr){

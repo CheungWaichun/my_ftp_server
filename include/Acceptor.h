@@ -22,7 +22,7 @@ public:
     // int set_stream(ACE_SOCK_Stream& stream);
 
 private:
-    ACE_SOCK_Acceptor acceptor;
+    ACE_SOCK_Acceptor control_acceptor;
     // ACE_SOCK_Stream stream;
     ACE_INET_Addr addr;
 

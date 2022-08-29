@@ -24,7 +24,8 @@ private:
     // std::string ret;
     // int stat = 0;//waiting connection
     enum COM_TYPE {USER=1, PASS, LIST, SYST, QUIT, PORT, 
-                   TYPE, CWD, PWD, OPTS, NLST, DELE};
+                   TYPE, CWD, PWD, OPTS, NLST, DELE, RMD,
+                   PASV};
     std::unordered_map<std::string, COM_TYPE> com_map = {
         {"USER", USER},
         {"PASS", PASS},
@@ -37,7 +38,9 @@ private:
         {"PWD",  PWD},
         {"OPTS", OPTS},
         {"NLST", NLST},
-        {"DELE", DELE}
+        {"DELE", DELE},
+        {"RMD" , RMD} ,
+        {"PASV", PASV}
     };
 
     int cmd_cwd(std::string&);
@@ -52,11 +55,15 @@ private:
 
     int cmd_pass(std::string);
 
+    int cmd_pasv();
+
     int cmd_port(std::string);
 
     int cmd_pwd();
 
     int cmd_quit();
+
+    int cmd_rmd(std::string&);
 
     int cmd_syst(std::string);
 
@@ -66,9 +73,9 @@ private:
 
     std::string construct_ret(int, std::string);
 
-    std::string get_file_dir(std::string&);
+    // std::string get_file_dir(std::string&);
 
-    std::string get_formal_dir(std::string&);
+    std::string get_formal_path(std::string&);
 
 };
 
