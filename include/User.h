@@ -11,25 +11,64 @@
 #include "ace/OS.h"
 
 class User{
+private:
+
+    enum STAT{WAIT_NAME, WAIT_PASSWORD, LOGINED} login_stat;
+    
+    //transfer type
+    enum TRANS_TYPE{Image, ASCII} trans_type;
+
 public:
     User();
     ~User();
 
     std::string get_name();
     std::string get_password();
-    // std::string get_root_dir(){
-    //     return this->root_dir;
-    // }
+
+    void set_passive(bool tf){
+        this->is_passive = tf;
+    }
+
+    char get_trans_type(){
+        switch (this->trans_type)
+        {
+        case ASCII:
+            return 'A';
+        case Image:
+            return 'I';
+        }
+        return ' ';
+    }
+
+    void set_trans_type(TRANS_TYPE tp){
+        this->trans_type = tp;
+    }
+
+    void set_trans_type(char tp){
+        switch (tp)
+        {
+        case 'A':
+            this->trans_type = ASCII;
+            break;
+        case 'I':
+            this->trans_type = Image;
+            break;
+        default:
+            break;
+        }
+    }
+
     std::string get_current_dir(){
         return this->current_dir;
     }
 
-    ACE_INET_Addr& get_local_data_addr(){
-        return this->local_data_conn_addr;
-    }
-
     void set_currrent_dir(std::string& dir){
         this->current_dir = dir;
+    }
+
+
+    ACE_INET_Addr& get_local_data_addr(){
+        return this->local_data_conn_addr;
     }
 
     void set_client_data_addr(ACE_INET_Addr& addr){
@@ -44,9 +83,7 @@ public:
         this->local_data_conn_addr = addr;
     }
 
-    void set_passive(bool tf){
-        this->passive = tf;
-    }
+
 
 
 
@@ -67,15 +104,11 @@ public:
         return 0;
     }
 
-    int send_data_msg(std::string msg){
-        this->data_stream.send(msg.c_str(), msg.length());
-        return 0;
-    }
+    int send_data_msg(std::string msg);
 
-    int send_data_msg_buf(char* buff, int size){
-        this->data_stream.send(buff, size);
-        return 0;
-    }
+    int send_data_msg_buf(char*, int);
+
+    int recv_data_msg_buf(char*, int);
 
     int close_data_stream(){
         this->data_stream.close();
@@ -86,15 +119,14 @@ public:
         return this->data_acceptor.open(addr, 1);
     }
 
+
 private:
     std::string name;
     std::string password;
     // std::string root_dir;
     std::string current_dir;
-    enum STAT{WAIT_NAME, WAIT_PASSWORD, LOGINED} login_stat;
-    enum TRANS_TYPE{BINARY, ASCII} trans_type;//transfer type
     // passive mode
-    bool passive;
+    bool is_passive;
 
     ACE_INET_Addr client_data_conn_addr;
     ACE_SOCK_Stream data_stream;

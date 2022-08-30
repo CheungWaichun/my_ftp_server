@@ -8,6 +8,9 @@
 #include "User.h"
 #include "ace/OS.h"
 #include "ace/INET_Addr.h"
+#include "ace/FILE_Connector.h"
+#include "ace/FILE_Addr.h"
+#include "ace/FILE_IO.h"
 
 
 class Command{
@@ -25,7 +28,7 @@ private:
     // int stat = 0;//waiting connection
     enum COM_TYPE {USER=1, PASS, LIST, SYST, QUIT, PORT, 
                    TYPE, CWD, PWD, OPTS, NLST, DELE, RMD,
-                   PASV};
+                   PASV, RETR, STOR};
     std::unordered_map<std::string, COM_TYPE> com_map = {
         {"USER", USER},
         {"PASS", PASS},
@@ -40,7 +43,9 @@ private:
         {"NLST", NLST},
         {"DELE", DELE},
         {"RMD" , RMD} ,
-        {"PASV", PASV}
+        {"PASV", PASV},
+        {"RETR", RETR},
+        {"STOR", STOR}
     };
 
     int cmd_cwd(std::string&);
@@ -63,7 +68,11 @@ private:
 
     int cmd_quit();
 
+    int cmd_retr(std::string&);
+
     int cmd_rmd(std::string&);
+
+    int cmd_stor(std::string&);
 
     int cmd_syst(std::string);
 

@@ -82,6 +82,13 @@ void Command::handle(){
             this->cmd_pasv();
             break;
 
+        case RETR:
+            this->cmd_retr(param);
+            break;
+
+        case STOR:
+            this->cmd_stor(param);
+            break;
 
         default:
             std::cout<<"default case."<<std::endl;
@@ -241,7 +248,6 @@ int Command::cmd_port(std::string raw_addr){
     addr.addr_to_string(buf, 1024);
     std::cout<<"addr is:" <<buf<<std::endl;
     this->user->set_client_data_addr(addr);
-    this->user->init_data_stream();
     this->user->send_control_msg(construct_ret(200, "PORT set."));
     return 0;
 }
@@ -257,6 +263,46 @@ int Command::cmd_pwd(){
 
 int Command::cmd_quit(){
     this->user->send_control_msg(construct_ret(221, "byebye."));
+    ACE_OS::exit(0);
+    return 0;
+}
+
+// read file logic implemented here, not in class User
+int Command::cmd_retr(std::string& param){
+    ACE_FILE_Connector file_connector;
+    ACE_FILE_Addr file_addr;
+    ACE_FILE_IO file_io;
+
+    std::string path = get_formal_path(param);
+    if(path.empty()){
+        std::cout<<"file not found."<<std::endl;
+        this->user->send_control_msg(construct_ret(550, "file not found."));
+        return -1;
+    }
+    if(path.back() == '/'){
+        this->user->send_control_msg(construct_ret(550, "not a file."));
+        return -1;
+    }
+
+    file_addr.set(path.c_str());
+
+    int file_mode = O_RDONLY;
+    if(this->user->get_trans_type() == 'I'){
+        file_mode |= O_BINARY;
+    }
+
+    file_connector.connect(file_io, file_addr, 0, ACE_Addr::sap_any, 0, file_mode);
+    char buf[2048] = {0};
+    int size = 0;
+    user->send_control_msg(construct_ret(125, "send begin."));
+    while((size = file_io.recv(buf, sizeof(buf))) > 0){
+        this->user->send_data_msg_buf(buf, size);
+    }
+    std::cout<<"file sent."<<std::endl;
+    user->close_data_stream();
+    user->send_control_msg(construct_ret(226, "send done."));
+
+    file_io.close();
 
     return 0;
 }
@@ -278,16 +324,61 @@ int Command::cmd_rmd(std::string& param){
     return 0;
 }
 
+int Command::cmd_stor(std::string& param){
+    ACE_FILE_Connector file_connector;
+    ACE_FILE_Addr file_addr;
+    ACE_FILE_IO file_io;
+
+    std::string path = "";
+    // cant use get_formal_path() method
+    if(param.empty()){
+        path = this->user->get_current_dir();
+    }else if(param[0] == '/'){
+        path = param;
+    }else{
+        path = this->user->get_current_dir() + '/' + param;
+    }
+
+    if(path.back() == '/'){
+        this->user->send_control_msg(construct_ret(550, "not a file. it's a directory."));
+        return -1;
+    }
+    std::cout<<"path is: "<<path<<std::endl;
+    file_addr.set(path.c_str());
+
+    int file_mode = O_RDWR | O_TRUNC | O_CREAT;
+    if(this->user->get_trans_type() == 'I'){
+        file_mode |= O_BINARY;
+    }
+
+    if(-1 == file_connector.connect(file_io, file_addr, 0, ACE_Addr::sap_any, 0, file_mode)){
+        user->send_control_msg(construct_ret(451, "local file error."));
+        return -1;
+    }
+    char buf[4096] = {0};
+    int total = user->recv_data_msg_buf(buf, sizeof(buf));
+    file_io.send(buf, total);
+    std::cout<<"file sent."<<std::endl;
+    user->close_data_stream();
+    user->send_control_msg(construct_ret(226, "recv done."));
+
+    file_io.close();
+
+    return 0;
+}
+
 int Command::cmd_syst(std::string param){
     this->user->send_control_msg(construct_ret(215, "ubuntu."));
     return 0;
 }
 
 int Command::cmd_type(std::string param){
-    if(param.compare("I") == 0){
-        user->send_control_msg(construct_ret(220, "Type set to binary."));
-    }else if(param.compare("A") == 0){
-        user->send_control_msg(construct_ret(220, "Type set to binary."));
+    if(param.compare("A") == 0){
+        this->user->set_trans_type('A');
+        user->send_control_msg(construct_ret(200, "Type set to ASCII."));
+    }else if(param.compare("I") == 0){
+        this->user->set_trans_type('I');
+        user->send_control_msg(construct_ret(200, "Type set to Image."));
     }else{
         user->send_control_msg(construct_ret(500, "what's this type?"));
     }

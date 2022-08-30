@@ -45,7 +45,23 @@ Detailed reason shows below.(about CRLF)
 After test, i know that the FILE which popen() method returns, each row ends with LF, not CRLF. When i modify it into CRLF, the warning is gone! The comment in the picture above is totally right.
 
 
+
+**when transfer in ASCII mode, server should make sure that every line of data_msg ends with <CRLF> !!!**  **then clients translate "\r\n" into their system's perform, **
+
+**for instance, unix client: "\r\n" --> '\n', windows client: "\r\n" --> "\r\n". I have verified this:**
+
+<img src=".\.Note_images\$.png" style="zoom: 67%;" />
+
+<img src=".\.Note_images\^M.png" style="zoom: 67%;" />
+
+
 4. 客户端在 Windows 环境时，可能需要关闭系统防火墙，不然Connector::connect() 方法发出的连接请求会被过滤。
+
+
+
+<br/>
+
+
 
 
 ## Adjust
@@ -66,7 +82,7 @@ move the right of sock_stream control from Handler to User. let Handler controll
 
 **Now:** choose Solu 1.
 
-
+3. 将‘通过数据连接发送’的逻辑独立出来，写到User类中，免得每个要发送数据的command都要自己init_data_stream.
 
 
 ### BUG1
