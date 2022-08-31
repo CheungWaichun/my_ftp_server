@@ -16,10 +16,10 @@
 class User{
 private:
 
-    enum STAT{WAIT_NAME, WAIT_PASSWORD, LOGINED} login_stat;
+    enum STAT{WAIT_NAME, WAIT_PASSWORD, LOGINED};
     
     //transfer type
-    enum TRANS_TYPE{Image, ASCII} trans_type;
+    enum TRANS_TYPE{Image, ASCII};
 
 public:
     User();
@@ -118,8 +118,7 @@ public:
     int recv_data_msg_file(ACE_FILE_IO&);
 
     int close_data_stream(){
-        this->data_stream.close();
-        return 0;
+        return this->data_stream.close();
     }
 
     int open_data_acceptor(ACE_INET_Addr& addr){
@@ -132,13 +131,21 @@ public:
     //     this->file_io = file_io;
     // }
 
+    void clear();
+
+
+
 private:
     std::string name;
     std::string password;
-    // std::string root_dir;
-    std::string current_dir;
+
+    STAT login_stat;
+    TRANS_TYPE trans_type;
     // passive mode
     bool is_passive;
+
+    // std::string root_dir;
+    std::string current_dir;
 
     ACE_INET_Addr client_data_conn_addr;
     ACE_SOCK_Stream data_stream;

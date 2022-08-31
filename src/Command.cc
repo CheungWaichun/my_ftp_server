@@ -90,6 +90,14 @@ void Command::handle(){
             this->cmd_stor(param);
             break;
 
+        case CDUP:
+            this->cmd_cdup();
+            break;
+
+        case REIN:
+            this->cmd_rein();
+            break;
+
         default:
             std::cout<<"default case."<<std::endl;
             break;
@@ -97,6 +105,11 @@ void Command::handle(){
 
 
     return;
+}
+
+int Command::cmd_cdup(){
+    std::string dir = "../";
+    return this->cmd_cwd(dir);
 }
 
 int Command::cmd_cwd(std::string& param){
@@ -281,6 +294,12 @@ int Command::cmd_quit(){
     return 0;
 }
 
+int Command::cmd_rein(){
+    user->clear();
+    user->send_control_msg(construct_ret(220, "rein success."));
+    return 0;
+}
+
 // read file logic implemented here, not in class User
 int Command::cmd_retr(std::string& param){
     ACE_FILE_Connector file_connector;
@@ -419,16 +438,12 @@ std::string Command::get_formal_path(std::string& raw_path){
         path = this->user->get_current_dir() + "/" + raw_path;
     }
     std::cout<<"full path:"<<path<<std::endl;
-    // erase '/' at the tail
-    // while(path.back() == '/'){
-    //     path.erase(path.end() - 1);
-    // }
-    std::cout<<"access"<<std::endl;
+
     // file of dir not exist, return ""
     if(ACE_OS::access(path.c_str(), 0) == -1){
         return "";
     }
-    std::cout<<"opendir"<<std::endl;
+
     // file path (not simplified)
     if(ACE_OS::opendir(path.c_str()) == NULL){
         return path;

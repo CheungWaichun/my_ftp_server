@@ -28,7 +28,7 @@ private:
     // int stat = 0;//waiting connection
     enum COM_TYPE {USER=1, PASS, LIST, SYST, QUIT, PORT, 
                    TYPE, CWD, PWD, OPTS, NLST, DELE, RMD,
-                   PASV, RETR, STOR};
+                   PASV, RETR, STOR, CDUP, REIN};
     std::unordered_map<std::string, COM_TYPE> com_map = {
         {"USER", USER},
         {"PASS", PASS},
@@ -45,8 +45,12 @@ private:
         {"RMD" , RMD} ,
         {"PASV", PASV},
         {"RETR", RETR},
-        {"STOR", STOR}
+        {"STOR", STOR},
+        {"CDUP", CDUP},
+        {"REIN", REIN}
     };
+
+    int cmd_cdup();
 
     int cmd_cwd(std::string&);
 
@@ -67,6 +71,8 @@ private:
     int cmd_pwd();
 
     int cmd_quit();
+
+    int cmd_rein();
 
     int cmd_retr(std::string&);
 

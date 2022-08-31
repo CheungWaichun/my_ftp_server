@@ -21,10 +21,16 @@ int main(){
     // printf("%s\n", buf);
     // cout<<str<<endl;
 
-    char* buf2 = new char[128];
-    cout<<sizeof(buf2)<<endl;
-    cout<<sizeof('a')<<endl;
+    // char* buf2 = new char[128];
+    // cout<<sizeof(buf2)<<endl;
+    // cout<<sizeof('a')<<endl;
 
+    ACE_INET_Addr addr("127.0.0.1:8888");
+    char buf[128];
+    addr.addr_to_string(buf, sizeof(buf));
+    printf("%s\n", buf);
+    addr.dump();
+    printf("%s\n", buf);
 
 
 

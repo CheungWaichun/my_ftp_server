@@ -131,6 +131,17 @@ int User::recv_data_msg_file(ACE_FILE_IO& file_io){
     return 0;
 }
 
+
+void User::clear(){
+    
+    login_stat = WAIT_NAME;
+    trans_type = ASCII;
+    is_passive = false;
+    current_dir.clear();
+    
+}
+
+
 std::string User::trim_to_CRLF(char* buf, size_t n){
     std::string str(buf, n);
     int index = 0;
