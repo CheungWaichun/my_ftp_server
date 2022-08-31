@@ -54,6 +54,16 @@ After test, i know that the FILE which popen() method returns, each row ends wit
 
 <img src=".\.Note_images\^M.png" style="zoom: 67%;" />
 
+<br></br>
+
+when using put(STOR) command in ASCII mode, client would also translate '\n' into "\r\n" as shown below: **t.txt** is the origin file in client, server recv **t5.txt** in ASCII mode(haven't implement translation logic in recv, so "^M$" proves that the client has done the translation indeed). And **t6.txt** is transferred in binary mode.
+
+<img src=".\.Note_images\113710.png" style="zoom:67%;" />
+
+<img src=".\.Note_images\113437.png" style="zoom:67%;" />
+
+
+<br></br>
 
 4. 客户端在 Windows 环境时，可能需要关闭系统防火墙，不然Connector::connect() 方法发出的连接请求会被过滤。
 

@@ -2,6 +2,7 @@
 #ifndef USER_H
 #define USER_H
 
+#include <cstring>
 #include <string>
 #include "ace/INET_Addr.h"
 #include "ace/SOCK_Stream.h"
@@ -9,6 +10,8 @@
 #include "ace/SOCK_Acceptor.h"
 #include <iostream>
 #include "ace/OS.h"
+#include "ace/FILE_IO.h"
+
 
 class User{
 private:
@@ -108,7 +111,11 @@ public:
 
     int send_data_msg_buf(char*, int);
 
+    int send_data_msg_file(ACE_FILE_IO&);
+
     int recv_data_msg_buf(char*, int);
+
+    int recv_data_msg_file(ACE_FILE_IO&);
 
     int close_data_stream(){
         this->data_stream.close();
@@ -119,6 +126,11 @@ public:
         return this->data_acceptor.open(addr, 1);
     }
 
+
+
+    // void set_file_io(ACE_FILE_IO& file_io){
+    //     this->file_io = file_io;
+    // }
 
 private:
     std::string name;
@@ -136,6 +148,11 @@ private:
 
     ACE_SOCK_Connector connector;
     ACE_SOCK_Acceptor data_acceptor;
+
+    // ACE_FILE_IO file_io;
+
+    std::string trim_to_CRLF(char*, size_t);
+    std::string trim_to_LF(char*, size_t);
 };
 
 

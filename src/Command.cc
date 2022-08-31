@@ -139,42 +139,54 @@ int Command::cmd_list(std::string param){
         return -1;
     }
     FILE *fp;
-    std::string cmd = "ls -a " + path;
+    std::string cmd = "ls -l " + path;
     std::cout<<"command is: "<<cmd<<std::endl;
     std::string data = "";
     if((fp = popen(cmd.c_str(), "r")) == NULL){
         std::cout << "error" << std::endl;
     }else{
         char row[1024];
-        // this->user->send_control_msg(construct_ret(125, "ready!"));
-
         while(ACE_OS::fgets(row, sizeof(row), fp)){
             data += row;
-            // std::printf("the last two:%d,%d",data[data.length() - 2],data[data.length() - 1]);
-            // data = data.substr(0,data.length() - 1);
-            // data += "\r\n";
-
-
-            // this->user->send_data_msg_buf(row, 1024);
-            // ACE_OS::memset(row, 0, sizeof(row));
         }
     }
     pclose(fp);
 
-    // data += '\n';
-    // data += '\r';
-
     this->user->send_control_msg(construct_ret(125, "ready!"));
     this->user->send_data_msg(data);
     std::cout<<"after send data"<<std::endl;
-    this->user->close_data_stream();
     this->user->send_control_msg(construct_ret(250, "completed!"));
 
     return 0;
 }
 
 int Command::cmd_nlst(std::string param){
-    return this->cmd_list(param);
+    std::string path = get_formal_path(param);
+    if(!param.empty() && path.empty()){
+        std::cout<<"path not exist."<<std::endl;
+        this->user->send_control_msg(construct_ret(550, "path not exist."));
+        return -1;
+    }
+    FILE *fp;
+    std::string cmd = "ls -p " + path + " | grep -v '/'";
+    std::cout<<"command is: "<<cmd<<std::endl;
+    std::string data = "";
+    if((fp = popen(cmd.c_str(), "r")) == NULL){
+        std::cout << "popen error" << std::endl;
+    }else{
+        char row[1024];
+        while(ACE_OS::fgets(row, sizeof(row), fp)){
+            data += row;
+        }
+    }
+    pclose(fp);
+
+    this->user->send_control_msg(construct_ret(125, "ready!"));
+    this->user->send_data_msg(data);
+    std::cout<<"after send data"<<std::endl;
+    this->user->send_control_msg(construct_ret(250, "completed!"));
+
+    return 0;
 }
 
 int Command::cmd_opts(std::string param){
@@ -248,6 +260,8 @@ int Command::cmd_port(std::string raw_addr){
     addr.addr_to_string(buf, 1024);
     std::cout<<"addr is:" <<buf<<std::endl;
     this->user->set_client_data_addr(addr);
+
+    this->user->set_passive(false);
     this->user->send_control_msg(construct_ret(200, "PORT set."));
     return 0;
 }
@@ -292,17 +306,11 @@ int Command::cmd_retr(std::string& param){
     }
 
     file_connector.connect(file_io, file_addr, 0, ACE_Addr::sap_any, 0, file_mode);
-    char buf[2048] = {0};
-    int size = 0;
-    user->send_control_msg(construct_ret(125, "send begin."));
-    while((size = file_io.recv(buf, sizeof(buf))) > 0){
-        this->user->send_data_msg_buf(buf, size);
-    }
-    std::cout<<"file sent."<<std::endl;
-    user->close_data_stream();
-    user->send_control_msg(construct_ret(226, "send done."));
 
-    file_io.close();
+    user->send_control_msg(construct_ret(125, "send begin."));
+    user->send_data_msg_file(file_io);
+    std::cout<<"file sent."<<std::endl;
+    user->send_control_msg(construct_ret(250, "send done."));
 
     return 0;
 }
@@ -355,14 +363,11 @@ int Command::cmd_stor(std::string& param){
         user->send_control_msg(construct_ret(451, "local file error."));
         return -1;
     }
-    char buf[4096] = {0};
-    int total = user->recv_data_msg_buf(buf, sizeof(buf));
-    file_io.send(buf, total);
-    std::cout<<"file sent."<<std::endl;
-    user->close_data_stream();
-    user->send_control_msg(construct_ret(226, "recv done."));
 
-    file_io.close();
+    user->send_control_msg(construct_ret(125, "recv begin."));
+    user->recv_data_msg_file(file_io);
+    std::cout<<"file sent."<<std::endl;
+    user->send_control_msg(construct_ret(226, "recv done."));
 
     return 0;
 }
@@ -465,3 +470,4 @@ ACE_INET_Addr Command::port_string_to_INET(std::string port_addr){
     // std::cout<<"port is:"<<addr.get_port_number()<<std::endl;
     return (ACE_INET_Addr)full_addr.c_str();
 }
+
