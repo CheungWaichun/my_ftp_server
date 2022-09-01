@@ -23,6 +23,31 @@ std::string User::get_password(){
     return this->password;
 }
 
+char User::get_trans_type(){
+    switch (this->trans_type)
+    {
+    case ASCII:
+        return 'A';
+    case Image:
+        return 'I';
+    }
+    return ' ';
+}
+
+void User::set_trans_type(char tp){
+    switch (tp)
+    {
+    case 'A':
+        this->trans_type = ASCII;
+        break;
+    case 'I':
+        this->trans_type = Image;
+        break;
+    default:
+        break;
+    }
+}
+
 int User::init_data_stream(){
     if(!is_passive){
         // positive
@@ -40,6 +65,11 @@ int User::init_data_stream(){
     }
 }
 
+int User::send_control_msg(int statcode, std::string descript){
+    std::string msg = std::to_string(statcode) + " " + descript + "\n";
+    return send_control_msg(msg);
+}
+
 int User::send_data_msg(std::string msg){
     init_data_stream();
 
@@ -51,6 +81,7 @@ int User::send_data_msg(std::string msg){
     close_data_stream();
     return 0;
 }
+
 
 int User::send_data_msg_buf(char* buf, int size){
     init_data_stream();

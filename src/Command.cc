@@ -98,8 +98,21 @@ void Command::handle(){
             this->cmd_rein();
             break;
 
+        case MKD:
+            this->cmd_mkd(param);
+            break;
+
+        case RNFR:
+            this->cmd_rnfr(param);
+            break;
+        
+        case RNTO:
+            this->cmd_rnto(param);
+            break;
+
         default:
             std::cout<<"default case."<<std::endl;
+            user->send_control_msg(500, "can't understand.");
             break;
     }
 
@@ -114,13 +127,20 @@ int Command::cmd_cdup(){
 
 int Command::cmd_cwd(std::string& param){
     std::string dir = this->get_formal_path(param);
-    if(dir.empty() || dir.back() != '/'){
-        this->user->send_control_msg(construct_ret(501, "not Exist."));
+    if(dir.compare("-1") == 0){
+        user->send_control_msg(501, "not Exist.");
         return -1;
+    }
+    if(dir.back() != '/'){
+        user->send_control_msg(553, "not a directory.");
+        return -1;
+    }
+    if(dir.empty()){
+        dir = "/home";
     }
 
     ACE_OS::chdir(dir.c_str());
-    this->user->send_control_msg(construct_ret(250, "dir changed to " + dir));
+    this->user->send_control_msg(250, "dir changed to " + dir);
     // erase '/' at tail
     dir.erase(dir.end() - 1);
     this->user->set_currrent_dir(dir);
@@ -130,29 +150,29 @@ int Command::cmd_cwd(std::string& param){
 int Command::cmd_dele(std::string& param){
     std::string path = this->get_formal_path(param);
     if(path.empty()){
-        this->user->send_control_msg(construct_ret(550, "file not found."));
+        this->user->send_control_msg(550, "file not found.");
         return -1;
     }
     if(path.back() == '/'){
-        this->user->send_control_msg(construct_ret(550, "not a file."));
+        this->user->send_control_msg(550, "not a file.");
         return -1;
     }
     std::string cmd = "rm -f " + path;
     std::cout<<"command is:"<<cmd<<std::endl;
     ACE_OS::system(cmd.c_str());
-    this->user->send_control_msg(construct_ret(250, "file deleted."));
+    this->user->send_control_msg(250, "file deleted.");
     return 0;
 }
 
 int Command::cmd_list(std::string param){
     std::string path = get_formal_path(param);
-    if(!param.empty() && path.empty()){
+    if(path.compare("-1") == 0){
         std::cout<<"path not exist."<<std::endl;
-        this->user->send_control_msg(construct_ret(550, "path not exist."));
+        this->user->send_control_msg(550, "path not exist.");
         return -1;
     }
     FILE *fp;
-    std::string cmd = "ls -l " + path;
+    std::string cmd = "ls -alp " + path;
     std::cout<<"command is: "<<cmd<<std::endl;
     std::string data = "";
     if((fp = popen(cmd.c_str(), "r")) == NULL){
@@ -165,23 +185,43 @@ int Command::cmd_list(std::string param){
     }
     pclose(fp);
 
-    this->user->send_control_msg(construct_ret(125, "ready!"));
+    this->user->send_control_msg(125, "ready!");
     this->user->send_data_msg(data);
     std::cout<<"after send data"<<std::endl;
-    this->user->send_control_msg(construct_ret(250, "completed!"));
+    this->user->send_control_msg(250, "completed!");
 
     return 0;
 }
 
+int Command::cmd_mkd(std::string param){
+    std::string dir = "";
+    if(param.empty()){
+        dir = this->user->get_current_dir();
+    }else if(param[0] == '/'){
+        dir = param;
+    }else{
+        dir = this->user->get_current_dir() + '/' + param;
+    }
+
+    if(ACE_OS::mkdir(dir.c_str()) == -1){
+        user->send_control_msg(550, "mkdir error.");
+        return -1;
+    }
+    user->send_control_msg(257, "mkdir success.");
+    return 0;
+
+}
+
 int Command::cmd_nlst(std::string param){
     std::string path = get_formal_path(param);
-    if(!param.empty() && path.empty()){
+    if(path.compare("-1") == 0){
         std::cout<<"path not exist."<<std::endl;
-        this->user->send_control_msg(construct_ret(550, "path not exist."));
+        this->user->send_control_msg(550, "path not exist.");
         return -1;
     }
     FILE *fp;
-    std::string cmd = "ls -p " + path + " | grep -v '/'";
+    // std::string cmd = "ls -ap " + path + " | grep -v '/'";
+    std::string cmd = "ls -ap " + path;
     std::cout<<"command is: "<<cmd<<std::endl;
     std::string data = "";
     if((fp = popen(cmd.c_str(), "r")) == NULL){
@@ -194,25 +234,30 @@ int Command::cmd_nlst(std::string param){
     }
     pclose(fp);
 
-    this->user->send_control_msg(construct_ret(125, "ready!"));
+    this->user->send_control_msg(125, "ready!");
     this->user->send_data_msg(data);
     std::cout<<"after send data"<<std::endl;
-    this->user->send_control_msg(construct_ret(250, "completed!"));
+    this->user->send_control_msg(250, "completed!");
 
     return 0;
 }
 
+int Command::cmd_noop(){
+    user->send_control_msg(220, "I am here.");
+    return 0;
+}
+
 int Command::cmd_opts(std::string param){
-    this->user->send_control_msg(construct_ret(200, "opts success."));
+    this->user->send_control_msg(200, "opts success.");
     return 0;
 }
 
 int Command::cmd_pass(std::string param){
     std::cout<<"pass param is: "<< param<<std::endl;
     if(!param.compare(this->user->get_password())){
-        this->user->send_control_msg(construct_ret(230, "login success."));
+        this->user->send_control_msg(230, "login success.");
     }else{
-        this->user->send_control_msg(construct_ret(530, "wrong password!"));
+        this->user->send_control_msg(530, "wrong password!");
     }
 
     return 0;
@@ -261,7 +306,7 @@ int Command::cmd_pasv(){
     std::string port2 = std::to_string(data_port % 256);
     std::string msg = "Entering Passive Mode (" + local_ip + "," + port1 + "," + port2 + ").";
     std::cout<<"msg is:"<<msg<<std::endl;
-    user->send_control_msg(construct_ret(227, msg));
+    user->send_control_msg(227, msg);
     return 0;
 }
 
@@ -275,7 +320,7 @@ int Command::cmd_port(std::string raw_addr){
     this->user->set_client_data_addr(addr);
 
     this->user->set_passive(false);
-    this->user->send_control_msg(construct_ret(200, "PORT set."));
+    this->user->send_control_msg(200, "PORT set.");
     return 0;
 }
 
@@ -283,20 +328,20 @@ int Command::cmd_pwd(){
     char buf[128] = {0};
     ACE_OS::getcwd(buf, 128);
     std::string dir = buf;
-    this->user->send_control_msg(construct_ret(257, "current dir: " + dir));
+    this->user->send_control_msg(257, "current dir: " + dir);
     this->user->set_currrent_dir(dir);
     return 0;
 }
 
 int Command::cmd_quit(){
-    this->user->send_control_msg(construct_ret(221, "byebye."));
+    this->user->send_control_msg(221, "byebye.");
     ACE_OS::exit(0);
     return 0;
 }
 
 int Command::cmd_rein(){
     user->clear();
-    user->send_control_msg(construct_ret(220, "rein success."));
+    user->send_control_msg(220, "rein success.");
     return 0;
 }
 
@@ -309,11 +354,11 @@ int Command::cmd_retr(std::string& param){
     std::string path = get_formal_path(param);
     if(path.empty()){
         std::cout<<"file not found."<<std::endl;
-        this->user->send_control_msg(construct_ret(550, "file not found."));
+        this->user->send_control_msg(550, "file not found.");
         return -1;
     }
     if(path.back() == '/'){
-        this->user->send_control_msg(construct_ret(550, "not a file."));
+        this->user->send_control_msg(550, "not a file.");
         return -1;
     }
 
@@ -326,28 +371,75 @@ int Command::cmd_retr(std::string& param){
 
     file_connector.connect(file_io, file_addr, 0, ACE_Addr::sap_any, 0, file_mode);
 
-    user->send_control_msg(construct_ret(125, "send begin."));
+    user->send_control_msg(125, "send begin.");
     user->send_data_msg_file(file_io);
     std::cout<<"file sent."<<std::endl;
-    user->send_control_msg(construct_ret(250, "send done."));
+    user->send_control_msg(250, "send done.");
 
     return 0;
 }
 
 int Command::cmd_rmd(std::string& param){
     std::string dir = get_formal_path(param);
+    if(dir.compare("-1") == 0){
+        user->send_control_msg(550, "dir not found.");
+        return -1;
+    }
     if(dir.empty()){
-        user->send_control_msg(construct_ret(550, "dir not found."));
+        user->send_control_msg(501, "dir can't be empty.");
         return -1;
     }
     if(dir.back() != '/'){
-        user->send_control_msg(construct_ret(550, "not a dir."));
+        user->send_control_msg(550, "not a dir.");
         return -1;
     }
     std::string cmd = "rm -rf " + dir;
     std::cout<<"command is:"<<cmd<<std::endl;
     ACE_OS::system(cmd.c_str());
-    user->send_control_msg(construct_ret(250, "dir removed."));
+    user->send_control_msg(250, "dir removed.");
+    return 0;
+}
+
+int Command::cmd_rnfr(std::string param){
+    // both dir and file can be renamed
+    std::string path = get_formal_path(param);
+    if(path.compare("-1") == 0){
+        user->send_control_msg(550, "file not exist.");
+        return -1;
+    }
+    if(path.empty()){
+        user->send_control_msg(501, "file name can't be empty.");
+        return -1;
+    }
+    user->set_dir_to_be_renamed(path);
+    user->send_control_msg(350, "waiting for RNTO command.");
+    return 0;
+}
+
+int Command::cmd_rnto(std::string param){
+    if(user->get_dir_to_be_renamed().empty()){
+        user->send_control_msg(503, "need RNFR command first.");
+        return -1;
+    }
+    std::string path = "";
+    if(param.empty()){
+        user->send_control_msg(501, "new file name can't be empty.");
+        return -1;
+    }else if(param[0] == '/'){
+        path = param;
+    }else{
+        path = this->user->get_current_dir() + '/' + param;
+    }
+
+    if(ACE_OS::rename(user->get_dir_to_be_renamed().c_str(), 
+                      path.c_str()) == -1)
+    {
+        user->send_control_msg(501, "rename failed.");
+        return -1;
+    }
+
+    user->set_dir_to_be_renamed("");
+    user->send_control_msg(250, "rename success.");
     return 0;
 }
 
@@ -367,7 +459,7 @@ int Command::cmd_stor(std::string& param){
     }
 
     if(path.back() == '/'){
-        this->user->send_control_msg(construct_ret(550, "not a file. it's a directory."));
+        this->user->send_control_msg(550, "not a file. it's a directory.");
         return -1;
     }
     std::cout<<"path is: "<<path<<std::endl;
@@ -379,32 +471,32 @@ int Command::cmd_stor(std::string& param){
     }
 
     if(-1 == file_connector.connect(file_io, file_addr, 0, ACE_Addr::sap_any, 0, file_mode)){
-        user->send_control_msg(construct_ret(451, "local file error."));
+        user->send_control_msg(451, "local file error.");
         return -1;
     }
 
-    user->send_control_msg(construct_ret(125, "recv begin."));
+    user->send_control_msg(125, "recv begin.");
     user->recv_data_msg_file(file_io);
     std::cout<<"file sent."<<std::endl;
-    user->send_control_msg(construct_ret(226, "recv done."));
+    user->send_control_msg(226, "recv done.");
 
     return 0;
 }
 
 int Command::cmd_syst(std::string param){
-    this->user->send_control_msg(construct_ret(215, "ubuntu."));
+    this->user->send_control_msg(215, "ubuntu.");
     return 0;
 }
 
 int Command::cmd_type(std::string param){
     if(param.compare("A") == 0){
         this->user->set_trans_type('A');
-        user->send_control_msg(construct_ret(200, "Type set to ASCII."));
+        user->send_control_msg(200, "Type set to ASCII.");
     }else if(param.compare("I") == 0){
         this->user->set_trans_type('I');
-        user->send_control_msg(construct_ret(200, "Type set to Image."));
+        user->send_control_msg(200, "Type set to Image.");
     }else{
-        user->send_control_msg(construct_ret(500, "what's this type?"));
+        user->send_control_msg(500, "what's this type?");
     }
     return 0;
 }
@@ -415,16 +507,13 @@ int Command::cmd_user(std::string param){
     // std::cout<<"name size:"<<this->user->get_name().size()<<std::endl;
     // std::printf("%d%d", param[5],param[6]);
     if(param.compare(this->user->get_name()) == 0){
-        this->user->send_control_msg(construct_ret(331, "need password."));
+        this->user->send_control_msg(331, "need password.");
     }else{
-        this->user->send_control_msg(construct_ret(530, "user not found!"));
+        this->user->send_control_msg(530, "user not found!");
     }
     return 0;
 }
 
-std::string Command::construct_ret(int statcode, std::string descript){
-    return std::to_string(statcode) + " " + descript + "\n";
-}
 
 
 std::string Command::get_formal_path(std::string& raw_path){
@@ -441,7 +530,7 @@ std::string Command::get_formal_path(std::string& raw_path){
 
     // file of dir not exist, return ""
     if(ACE_OS::access(path.c_str(), 0) == -1){
-        return "";
+        return "-1";
     }
 
     // file path (not simplified)

@@ -32,41 +32,29 @@ public:
         this->is_passive = tf;
     }
 
-    char get_trans_type(){
-        switch (this->trans_type)
-        {
-        case ASCII:
-            return 'A';
-        case Image:
-            return 'I';
-        }
-        return ' ';
-    }
+    char get_trans_type();
 
     void set_trans_type(TRANS_TYPE tp){
         this->trans_type = tp;
     }
 
-    void set_trans_type(char tp){
-        switch (tp)
-        {
-        case 'A':
-            this->trans_type = ASCII;
-            break;
-        case 'I':
-            this->trans_type = Image;
-            break;
-        default:
-            break;
-        }
-    }
+    void set_trans_type(char tp);
+
 
     std::string get_current_dir(){
         return this->current_dir;
     }
 
-    void set_currrent_dir(std::string& dir){
+    void set_currrent_dir(std::string dir){
         this->current_dir = dir;
+    }
+
+    void set_dir_to_be_renamed(std::string dir){
+        this->dir_to_be_renamed = dir;
+    }
+
+    std::string get_dir_to_be_renamed(){
+        return this->dir_to_be_renamed;
     }
 
 
@@ -92,20 +80,19 @@ public:
 
     int init_data_stream();
 
-    int set_data_stream(ACE_SOCK_Stream& stream){
+    void set_data_stream(ACE_SOCK_Stream& stream){
         this->data_stream = stream;
-        return 0;
     }
 
-    int set_control_stream(ACE_SOCK_Stream& stream){
+    void set_control_stream(ACE_SOCK_Stream& stream){
         this->control_stream = stream;
-        return 0;
     }
 
     int send_control_msg(std::string msg){
-        this->control_stream.send(msg.c_str(), msg.length());
-        return 0;
+        return control_stream.send(msg.c_str(), msg.length());
     }
+
+    int send_control_msg(int, std::string);
 
     int send_data_msg(std::string msg);
 
@@ -124,8 +111,6 @@ public:
     int open_data_acceptor(ACE_INET_Addr& addr){
         return this->data_acceptor.open(addr, 1);
     }
-
-
 
     // void set_file_io(ACE_FILE_IO& file_io){
     //     this->file_io = file_io;
@@ -146,6 +131,7 @@ private:
 
     // std::string root_dir;
     std::string current_dir;
+    std::string dir_to_be_renamed;
 
     ACE_INET_Addr client_data_conn_addr;
     ACE_SOCK_Stream data_stream;
