@@ -1,6 +1,7 @@
 .vscode/
 server
 # test/
-*.txt
+
 sv
 test
+build/

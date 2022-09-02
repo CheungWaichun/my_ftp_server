@@ -25,14 +25,26 @@ void Command::handle(){
     std::cout<<"head is:"<<head<<std::endl;
     std::cout<<"param is: "<<param<<std::endl;
     std::cout<<"map result is:"<<com_map[head]<<std::endl;
-    switch (com_map[head]){
-        case USER:
-            this->cmd_user(param);
-            break;
 
-        case PASS:
-            this->cmd_pass(param);
-            break;
+    if(user->get_login_stat() != 2){
+        if(user->get_login_stat() == 0){
+            if(com_map[head] == USER){
+                this->cmd_user(param);
+            }else{
+                user->send_control_msg(530, "haven't logged in.");
+            }
+        }else{
+            if(com_map[head] == PASS){
+                this->cmd_pass(param);
+            }else{
+                user->send_control_msg(530, "need password!");
+            }
+        }
+
+        return;
+    }
+
+    switch (com_map[head]){
 
         case LIST:
             this->cmd_list(param);
@@ -255,6 +267,7 @@ int Command::cmd_opts(std::string param){
 int Command::cmd_pass(std::string param){
     std::cout<<"pass param is: "<< param<<std::endl;
     if(!param.compare(this->user->get_password())){
+        user->set_login_stat(2);
         this->user->send_control_msg(230, "login success.");
     }else{
         this->user->send_control_msg(530, "wrong password!");
@@ -507,6 +520,7 @@ int Command::cmd_user(std::string param){
     // std::cout<<"name size:"<<this->user->get_name().size()<<std::endl;
     // std::printf("%d%d", param[5],param[6]);
     if(param.compare(this->user->get_name()) == 0){
+        user->set_login_stat(1);
         this->user->send_control_msg(331, "need password.");
     }else{
         this->user->send_control_msg(530, "user not found!");

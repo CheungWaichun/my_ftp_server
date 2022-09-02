@@ -32,6 +32,14 @@ public:
         this->is_passive = tf;
     }
 
+    int get_login_stat(){
+        return this->login_stat;
+    }
+
+    void set_login_stat(int stat){
+        this->login_stat = STAT(stat);
+    }
+
     char get_trans_type();
 
     void set_trans_type(TRANS_TYPE tp){
