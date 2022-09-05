@@ -1,3 +1,6 @@
+/// \file Handler.h
+/// \brief 接受已建立（控制）连接中的请求并进行处理
+/// \author zhangweijun (zhangweijun@scutech.com)
 
 #ifndef HANDLER_H
 #define HANDLER_H

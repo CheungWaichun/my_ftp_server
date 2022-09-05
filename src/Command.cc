@@ -24,7 +24,7 @@ void Command::handle(){
     }
     std::cout<<"head is:"<<head<<std::endl;
     std::cout<<"param is: "<<param<<std::endl;
-    std::cout<<"map result is:"<<com_map[head]<<std::endl;
+    // std::cout<<"map result is:"<<com_map[head]<<std::endl;
 
     if(user->get_login_stat() != 2){
         if(user->get_login_stat() == 0){
@@ -37,7 +37,7 @@ void Command::handle(){
             if(com_map[head] == PASS){
                 this->cmd_pass(param);
             }else{
-                user->send_control_msg(530, "need password!");
+                user->send_control_msg(331, "need password!");
             }
         }
 
@@ -268,9 +268,10 @@ int Command::cmd_pass(std::string param){
     std::cout<<"pass param is: "<< param<<std::endl;
     if(!param.compare(this->user->get_password())){
         user->set_login_stat(2);
-        this->user->send_control_msg(230, "login success.");
+        user->send_control_msg(230, "login success.");
     }else{
-        this->user->send_control_msg(530, "wrong password!");
+        user->set_login_stat(0);
+        user->send_control_msg(530, "wrong password!");
     }
 
     return 0;
@@ -338,17 +339,19 @@ int Command::cmd_port(std::string raw_addr){
 }
 
 int Command::cmd_pwd(){
-    char buf[128] = {0};
-    ACE_OS::getcwd(buf, 128);
-    std::string dir = buf;
+    // char buf[128] = {0};
+    // ACE_OS::getcwd(buf, 128);
+    // std::string dir = buf;
+    std::string dir = user->get_current_dir();
     this->user->send_control_msg(257, "current dir: " + dir);
     this->user->set_currrent_dir(dir);
     return 0;
 }
 
 int Command::cmd_quit(){
+    user->clear();
     this->user->send_control_msg(221, "byebye.");
-    ACE_OS::exit(0);
+    // ACE_OS::exit(0);
     return 0;
 }
 

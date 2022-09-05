@@ -1,3 +1,7 @@
+/// \file Acceptor.h
+/// \brief Acceptor监听端口并接受新连接
+/// \author zhangweijun (zhangweijun@scutech.com)
+
 #ifndef ACCEPTOR_H
 #define ACCEPTOR_H
 

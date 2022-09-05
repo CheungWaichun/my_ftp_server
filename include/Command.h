@@ -1,4 +1,6 @@
-
+/// \file Command.h
+/// \brief FTP命令的处理逻辑
+/// \author zhangweijun (zhangweijun@scutech.com)
 
 #ifndef COMMAND_H
 #define COMMAND_H

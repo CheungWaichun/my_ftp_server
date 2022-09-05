@@ -1,3 +1,6 @@
+/// \file User.h
+/// \brief 记录用户的信息和状态
+/// \author zhangweijun (zhangweijun@scutech.com)
 
 #ifndef USER_H
 #define USER_H
@@ -137,7 +140,7 @@ private:
     // passive mode
     bool is_passive;
 
-    // std::string root_dir;
+    std::string root_dir;
     std::string current_dir;
     std::string dir_to_be_renamed;
 
