@@ -3,10 +3,11 @@
 
 Handler::Handler(){
     // this->user = NULL;
+    std::cout<<"i am a new Handler."<<std::endl;
 }
 
 Handler::~Handler(){
-
+    std::cout<<"i am a Handler, i am dying."<<std::endl;
 }
 
 int Handler::set_user(User* user){
@@ -14,8 +15,8 @@ int Handler::set_user(User* user){
     return 0;
 }
 
-int Handler::set_stream(ACE_SOCK_Stream stream){
-    this->stream = stream;
+int Handler::set_control_stream(ACE_SOCK_Stream stream){
+    this->control_stream = stream;
     return 0;
 }
 
@@ -23,35 +24,31 @@ int Handler::set_stream(ACE_SOCK_Stream stream){
 
 // }
 
-int Handler::handle_input(ACE_HANDLE){
+int Handler::handle_input(ACE_HANDLE fd){
     // std::cout<<"handle_input called"<<std::endl;
-    memset(data, 0, 128);
-    int count = this->stream.recv(data, 128);
-    ACE_DEBUG((LM_DEBUG, "%s\n", data));
-    std::cout<<"data is:"<<data<<std::endl;
+    memset(this->command, 0, 128);
+    int count = this->control_stream.recv(this->command, 128);
+    ACE_DEBUG((LM_DEBUG, "%s\n", this->command));
+    std::cout<<"command is:"<<this->command<<std::endl;
     
 
     //命令处理逻辑
-    // ACE_DEBUG((LM_DEBUG,ACE_TEXT("i am command handler!Waiting to be implemented!\n")));
-    // std::cout<<"i am command handler!Waiting to be implemented!\n"<<std::endl;
-    Command* cmd = new Command(data, this->user);
-    std::pair<int, std::string> pr = cmd->handle();
-    int stat = pr.first;
-    std::string ret = pr.second;
-    std::cout<<"ret is:" << ret<<std::endl;
-    // this->stream.send("331 OK.\n", 10);
-    // std::cout<<"ret size is:"<<ret.size()<<std::endl;
-    this->stream.send(ret.c_str(), ret.length());
-    if(stat == -1){
-        this->stream.close();
-    }
+
+    Command* cmd = new Command(this->command, this->user);
+
+    //
+    this->user->set_control_stream(this->control_stream);
+
+
+    cmd->handle();
+
     return 0;
 }
 
 ACE_HANDLE Handler::get_handle() const{
-    return this->stream.get_handle();
+    return this->control_stream.get_handle();
 }
 
-ACE_SOCK_Stream& Handler::get_stream(){
-    return this->stream;
+ACE_SOCK_Stream& Handler::get_control_stream(){
+    return this->control_stream;
 }

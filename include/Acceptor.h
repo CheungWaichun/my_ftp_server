@@ -1,3 +1,7 @@
+/// \file Acceptor.h
+/// \brief Acceptor监听端口并接受新连接
+/// \author zhangweijun (zhangweijun@scutech.com)
+
 #ifndef ACCEPTOR_H
 #define ACCEPTOR_H
 
@@ -14,13 +18,15 @@ public:
     ~Acceptor();
     //
     int open(ACE_INET_Addr &addr);
+
     int handle_input(ACE_HANDLE);
+    int handle_close(ACE_HANDLE);
 
     ACE_HANDLE get_handle() const;
     // int set_stream(ACE_SOCK_Stream& stream);
 
 private:
-    ACE_SOCK_Acceptor acceptor;
+    ACE_SOCK_Acceptor control_acceptor;
     // ACE_SOCK_Stream stream;
     ACE_INET_Addr addr;
 
