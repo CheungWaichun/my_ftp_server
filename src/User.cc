@@ -55,7 +55,6 @@ int User::init_data_stream(){
         // positive
         this->connector.connect(data_stream, client_data_conn_addr);
         std::cout<<"data_stream built in positive mode."<<std::endl;
-        return 0;
 
     }else{
         // passive
@@ -63,8 +62,9 @@ int User::init_data_stream(){
         std::cout<<"data_stream built in passive mode."<<std::endl;
         data_stream.get_remote_addr(client_data_conn_addr);
         // data_acceptor.close();
-        return 0;
     }
+    return 0;
+
 }
 
 int User::send_control_msg(int statcode, std::string descript){
@@ -127,7 +127,7 @@ int User::recv_data_msg_buf(char* buf, int size){
         buf += recv_size;
         size -= recv_size;
         total_size += recv_size;
-        std::cout<<"recv_size: "<<recv_size<<std::endl;
+        // std::cout<<"recv_size: "<<recv_size<<std::endl;
         if(size <= 0){
             std::cout<<"buf too small !!"<<std::endl;
             break;
@@ -143,6 +143,8 @@ int User::recv_data_msg_file(ACE_FILE_IO& file_io){
     init_data_stream();
     char* buf = new char[128];
     int data_size = 0;
+    std::cout<<"tid:"<<syscall(SYS_gettid)<<std::endl;
+
     // used in ASCII case
     std::string str = "";
     while((data_size = data_stream.recv(buf, sizeof(buf))) > 0){
@@ -151,9 +153,9 @@ int User::recv_data_msg_file(ACE_FILE_IO& file_io){
             buf = strncpy(buf, str.c_str(), str.length());
             data_size = str.length();
         }
-        std::cout<<"data_size is: "<<data_size<<std::endl;
+        // std::cout<<"data_size is: "<<data_size<<std::endl;
         file_io.send(buf, data_size);
-        std::cout<<"file written."<<std::endl;
+        // std::cout<<"file written."<<std::endl;
     }
     delete[] buf;
     std::cout<<"delete complete."<<std::endl;

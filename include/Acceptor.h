@@ -11,26 +11,29 @@
 #include "ace/INET_Addr.h"
 #include "User.h"
 #include "Handler.h"
+#include "ace/Thread_Manager.h"
+#include <iostream>
+#include <memory>
+
 
 class Acceptor:public ACE_Event_Handler{
 public:
     Acceptor(ACE_INET_Addr &addr);
     ~Acceptor();
-    //
+
     int open(ACE_INET_Addr &addr);
 
     int handle_input(ACE_HANDLE);
     int handle_close(ACE_HANDLE);
 
     ACE_HANDLE get_handle() const;
-    // int set_stream(ACE_SOCK_Stream& stream);
+
+    static ACE_THR_FUNC_RETURN run_svc(void *arg);
+
 
 private:
     ACE_SOCK_Acceptor control_acceptor;
-    // ACE_SOCK_Stream stream;
     ACE_INET_Addr addr;
-
-
 };
 
 

@@ -17,6 +17,7 @@ public:
     Handler();
     ~Handler();
     int set_user(User*);
+    User* get_user(){return this->user;}
     int set_control_stream(ACE_SOCK_Stream);
     // int register_read();
     int handle_input(ACE_HANDLE);

@@ -98,6 +98,7 @@ public:
     void set_control_stream(ACE_SOCK_Stream& stream){
         this->control_stream = stream;
     }
+    ACE_SOCK_Stream* get_control_stream(){return &this->control_stream;}
 
     int send_control_msg(std::string msg){
         return control_stream.send(msg.c_str(), msg.length());
