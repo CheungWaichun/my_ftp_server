@@ -6,7 +6,8 @@ User::User(){
     password = "123456";
     login_stat = WAIT_NAME;
     trans_type = ASCII;
-    root_dir = "/home/cheungwaichun/my_ftp_server/";
+    root_dir = "/home/cwc/my_ftp_server/";
+    // ACE_OS::chdir(root_dir.c_str());
     // current_dir = get_current_dir_name();
     current_dir = root_dir;
     // std::cout<<current_dir<<std::endl;

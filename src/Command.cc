@@ -212,7 +212,7 @@ int Command::cmd_mkd(std::string param){
     }else if(param[0] == '/'){
         dir = param;
     }else{
-        dir = this->user->get_current_dir() + '/' + param;
+        dir = this->user->get_current_dir() + param;
     }
 
     if(ACE_OS::mkdir(dir.c_str()) == -1){
@@ -444,7 +444,7 @@ int Command::cmd_rnto(std::string param){
     }else if(param[0] == '/'){
         path = param;
     }else{
-        path = this->user->get_current_dir() + '/' + param;
+        path = this->user->get_current_dir() + param;
     }
 
     if(ACE_OS::rename(user->get_dir_to_be_renamed().c_str(), 
@@ -471,7 +471,7 @@ int Command::cmd_stor(std::string& param){
     }else if(param[0] == '/'){
         path = param;
     }else{
-        path = this->user->get_current_dir() + '/' + param;
+        path = this->user->get_current_dir() + param;
     }
 
     if(path.back() == '/'){
