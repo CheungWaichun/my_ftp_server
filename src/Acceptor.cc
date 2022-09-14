@@ -11,6 +11,7 @@ Acceptor::~Acceptor(){
 
 int Acceptor::open(ACE_INET_Addr &addr){
     this->control_acceptor.open(addr);
+    std::cout<<"waiting for new connection."<<std::endl;
     return 0;
 }
 

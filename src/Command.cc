@@ -22,8 +22,8 @@ void Command::handle(){
     while(param[param.length() - 1] == '\r' || param[param.length() - 1] == '\n'){
         param = param.substr(0, param.length() - 1);
     }
-    std::cout<<"head is:"<<head<<std::endl;
-    std::cout<<"param is: "<<param<<std::endl;
+    // std::cout<<"head is:"<<head<<std::endl;
+    // std::cout<<"param is: "<<param<<std::endl;
 
     if(user->get_login_stat() != 2){
         if(user->get_login_stat() == 0){
@@ -194,7 +194,6 @@ int Command::cmd_list(std::string param){
 
     this->user->send_control_msg(125, "ready!");
     this->user->send_data_msg(data);
-    std::cout<<"after send data"<<std::endl;
     this->user->send_control_msg(250, "completed!");
 
     return 0;
@@ -260,7 +259,6 @@ int Command::cmd_opts(std::string param){
 }
 
 int Command::cmd_pass(std::string param){
-    std::cout<<"pass param is: "<< param<<std::endl;
     if(!param.compare(this->user->get_password())){
         user->set_login_stat(2);
         user->send_control_msg(230, "login success.");
@@ -320,7 +318,6 @@ int Command::cmd_pasv(){
 }
 
 int Command::cmd_port(std::string raw_addr){
-    //
     std::cout<<"raw_addr is:"<<raw_addr<<std::endl;
     ACE_INET_Addr addr = port_string_to_INET(raw_addr);
     char buf[1024] = {0};
@@ -493,7 +490,7 @@ int Command::cmd_stor(std::string& param){
 int Command::cmd_syst(std::string param){
     FILE *fp;
     std::string cmd = "cat /etc/issue";
-    std::cout<<"command is: "<<cmd<<std::endl;
+
     std::string data = "";
     if((fp = popen(cmd.c_str(), "r")) == NULL){
         std::cout << "popen error" << std::endl;
@@ -504,7 +501,10 @@ int Command::cmd_syst(std::string param){
         }
     }
     pclose(fp);
-
+    // trim '\n' '\l'
+    while(!data.empty() && data.back() < 32){
+        data.erase(data.end() - 1);
+    }
     this->user->send_control_msg(215, data);
     return 0;
 }
@@ -523,9 +523,6 @@ int Command::cmd_type(std::string param){
 }
 
 int Command::cmd_user(std::string param){
-    std::cout<<"user param is: "<< param<<std::endl;
-    std::cout<<"param size :"<<param.size()<<std::endl;
-
     if(param.compare(this->user->get_name()) == 0){
         user->set_login_stat(1);
         this->user->send_control_msg(331, "need password.");

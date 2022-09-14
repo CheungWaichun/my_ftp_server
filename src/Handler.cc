@@ -23,7 +23,7 @@ int Handler::handle_input(ACE_HANDLE fd){
     memset(this->command, 0, 128);
     int count = this->control_stream.recv(this->command, 128);
     ACE_DEBUG((LM_DEBUG, "%s\n", this->command));
-    std::cout<<"command is:"<<this->command<<std::endl;
+    // std::cout<<"command is:"<<this->command<<std::endl;
 
     Command* cmd = new Command(this->command, this->user);
     this->user->set_control_stream(this->control_stream);
