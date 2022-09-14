@@ -26,8 +26,6 @@ public:
 private:
     std::string com;
     User* user;
-    // std::string ret;
-    // int stat = 0;//waiting connection
     enum COM_TYPE {USER=1, PASS, LIST, SYST, QUIT, PORT, 
                    TYPE, CWD, PWD, OPTS, NLST, DELE, RMD,
                    PASV, RETR, STOR, CDUP, REIN, MKD, NOOP,
@@ -100,9 +98,6 @@ private:
     int cmd_type(std::string);
 
     int cmd_user(std::string);
-
-
-    // std::string get_file_dir(std::string&);
 
     std::string get_formal_path(std::string&);
 

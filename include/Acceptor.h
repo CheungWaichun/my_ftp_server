@@ -28,7 +28,7 @@ public:
 
     ACE_HANDLE get_handle() const;
 
-    static ACE_THR_FUNC_RETURN run_svc(void *arg);
+    // static ACE_THR_FUNC_RETURN run_svc(void *arg);
 
 
 private:

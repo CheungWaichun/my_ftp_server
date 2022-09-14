@@ -86,9 +86,6 @@ public:
     }
 
 
-
-
-
     int init_data_stream();
 
     void set_data_stream(ACE_SOCK_Stream& stream){
@@ -124,12 +121,7 @@ public:
         return this->data_acceptor.open(addr, 1);
     }
 
-    // void set_file_io(ACE_FILE_IO& file_io){
-    //     this->file_io = file_io;
-    // }
-
     void clear();
-
 
 
 private:
@@ -153,8 +145,6 @@ private:
 
     ACE_SOCK_Connector connector;
     ACE_SOCK_Acceptor data_acceptor;
-
-    // ACE_FILE_IO file_io;
 
     std::string trim_to_CRLF(char*, size_t);
     std::string trim_to_LF(char*, size_t);

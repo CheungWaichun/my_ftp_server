@@ -6,11 +6,14 @@ User::User(){
     password = "123456";
     login_stat = WAIT_NAME;
     trans_type = ASCII;
-    root_dir = "/home/cwc/my_ftp_server/";
-    // ACE_OS::chdir(root_dir.c_str());
-    // current_dir = get_current_dir_name();
+
+    ACE_OS::chdir((std::string(get_current_dir_name()) + "/../").c_str());
+    char buf[128] = {0};
+    ACE_OS::getcwd(buf, 128);
+    root_dir = buf;
+    root_dir += '/';
     current_dir = root_dir;
-    // std::cout<<current_dir<<std::endl;
+
     is_passive = false;
 }
 
@@ -123,12 +126,10 @@ int User::recv_data_msg_buf(char* buf, int size){
     init_data_stream();
     int total_size = 0;
     int recv_size = 0;
-    // std::printf("buf pointer is: %p\n", buf);
     while((recv_size = data_stream.recv(buf, size)) > 0){
         buf += recv_size;
         size -= recv_size;
         total_size += recv_size;
-        // std::cout<<"recv_size: "<<recv_size<<std::endl;
         if(size <= 0){
             std::cout<<"buf too small !!"<<std::endl;
             break;
@@ -144,7 +145,7 @@ int User::recv_data_msg_file(ACE_FILE_IO& file_io){
     init_data_stream();
     char* buf = new char[128];
     int data_size = 0;
-    std::cout<<"tid:"<<syscall(SYS_gettid)<<std::endl;
+    // std::cout<<"tid:"<<syscall(SYS_gettid)<<std::endl;
 
     // used in ASCII case
     std::string str = "";
@@ -154,14 +155,10 @@ int User::recv_data_msg_file(ACE_FILE_IO& file_io){
             buf = strncpy(buf, str.c_str(), str.length());
             data_size = str.length();
         }
-        // std::cout<<"data_size is: "<<data_size<<std::endl;
         file_io.send(buf, data_size);
-        // std::cout<<"file written."<<std::endl;
     }
     delete[] buf;
-    std::cout<<"delete complete."<<std::endl;
     file_io.close();
-    std::cout<<"file closed."<<std::endl;
     close_data_stream();
     std::cout<<"data stream closed."<<std::endl;
     return 0;
@@ -169,12 +166,10 @@ int User::recv_data_msg_file(ACE_FILE_IO& file_io){
 
 
 void User::clear(){
-    
     login_stat = WAIT_NAME;
     trans_type = ASCII;
     is_passive = false;
     current_dir.clear();
-    
 }
 
 

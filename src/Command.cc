@@ -3,11 +3,11 @@
 Command::Command(std::string com, User* user){
     this->com = com;
     this->user = user;
-    std::cout<<"i am a new Command."<<std::endl;
+    // std::cout<<"i am a new Command."<<std::endl;
 }
 
 Command::~Command(){
-    std::cout<<"i am a Command, i am dying."<<std::endl;
+    // std::cout<<"i am a Command, i am dying."<<std::endl;
 }
 
 void Command::handle(){
@@ -24,7 +24,6 @@ void Command::handle(){
     }
     std::cout<<"head is:"<<head<<std::endl;
     std::cout<<"param is: "<<param<<std::endl;
-    // std::cout<<"map result is:"<<com_map[head]<<std::endl;
 
     if(user->get_login_stat() != 2){
         if(user->get_login_stat() == 0){
@@ -40,12 +39,10 @@ void Command::handle(){
                 user->send_control_msg(331, "need password!");
             }
         }
-
         return;
     }
 
     switch (com_map[head]){
-
         case LIST:
             this->cmd_list(param);
             break;
@@ -127,8 +124,6 @@ void Command::handle(){
             user->send_control_msg(500, "can't understand.");
             break;
     }
-
-
     return;
 }
 
@@ -339,9 +334,6 @@ int Command::cmd_port(std::string raw_addr){
 }
 
 int Command::cmd_pwd(){
-    // char buf[128] = {0};
-    // ACE_OS::getcwd(buf, 128);
-    // std::string dir = buf;
     std::string dir = user->get_current_dir();
     this->user->send_control_msg(257, "current dir: " + dir);
     this->user->set_currrent_dir(dir);
@@ -351,7 +343,6 @@ int Command::cmd_pwd(){
 int Command::cmd_quit(){
     user->clear();
     this->user->send_control_msg(221, "byebye.");
-    // ACE_OS::exit(0);
     return 0;
 }
 
@@ -465,7 +456,7 @@ int Command::cmd_stor(std::string& param){
     ACE_FILE_IO file_io;
 
     std::string path = "";
-    // cant use get_formal_path() method
+    // can't use get_formal_path() method
     if(param.empty()){
         path = this->user->get_current_dir();
     }else if(param[0] == '/'){
@@ -500,7 +491,21 @@ int Command::cmd_stor(std::string& param){
 }
 
 int Command::cmd_syst(std::string param){
-    this->user->send_control_msg(215, "ubuntu.");
+    FILE *fp;
+    std::string cmd = "cat /etc/issue";
+    std::cout<<"command is: "<<cmd<<std::endl;
+    std::string data = "";
+    if((fp = popen(cmd.c_str(), "r")) == NULL){
+        std::cout << "popen error" << std::endl;
+    }else{
+        char row[1024];
+        while(ACE_OS::fgets(row, sizeof(row), fp)){
+            data += row;
+        }
+    }
+    pclose(fp);
+
+    this->user->send_control_msg(215, data);
     return 0;
 }
 
@@ -520,8 +525,7 @@ int Command::cmd_type(std::string param){
 int Command::cmd_user(std::string param){
     std::cout<<"user param is: "<< param<<std::endl;
     std::cout<<"param size :"<<param.size()<<std::endl;
-    // std::cout<<"name size:"<<this->user->get_name().size()<<std::endl;
-    // std::printf("%d%d", param[5],param[6]);
+
     if(param.compare(this->user->get_name()) == 0){
         user->set_login_stat(1);
         this->user->send_control_msg(331, "need password.");
@@ -532,7 +536,12 @@ int Command::cmd_user(std::string param){
 }
 
 
-
+/// \brief 将输入路径转换成绝对路径输出，并在目录路径后加'/'以区分目录和文件路径
+/// \param[in] raw_path 原始路径，可以是绝对路径和相对路径
+/// \retval "-1" 当路径不存在时
+/// \retval "" 当输入为空串时，由于空串对于不同命令含义不同，如ls命令是当前目录，而
+///            cd命令则是根目录，所以直接返回空串，由具体命令自行处理
+/// \retval 以string形式返回 raw_path 对应的绝对路径
 std::string Command::get_formal_path(std::string& raw_path){
     std::string path = "";
     if(raw_path.empty()){
@@ -570,25 +579,22 @@ std::string Command::get_formal_path(std::string& raw_path){
 ACE_INET_Addr Command::port_string_to_INET(std::string port_addr){
     int last_comma = port_addr.find_last_of(',');
     int second_port = std::stoi(port_addr.substr(last_comma + 1));
-    // std::cout<<"second port:"<<second_port<<std::endl;
+
     port_addr = port_addr.substr(0, last_comma);
     int port_comma = port_addr.find_last_of(',');
     int first_port = std::stoi(port_addr.substr(port_comma + 1));
-    // std::cout<<"first port:"<<first_port<<std::endl;
+
     int port = first_port * 256 + second_port;
-    // std::cout<<"port:"<<port<<std::endl;
+
     std::string ip = port_addr.substr(0, port_comma);
-    // std::cout<<"ip:"<<ip<<std::endl;
+
     // get format ip address
     int pos = -1;
     while((pos = ip.find(',')) != -1){
         ip.replace(pos, 1, ".");
     }
-    // std::cout<<"format ip:"<<ip<<std::endl;
     std::string full_addr = ip + ":" + std::to_string(port);
 
-    // std::cout<<"ip is:"<<addr.get_ip_address()<<std::endl;
-    // std::cout<<"port is:"<<addr.get_port_number()<<std::endl;
     return (ACE_INET_Addr)full_addr.c_str();
 }
 

@@ -13,7 +13,6 @@ int main(int argc, char* argv[]){
     // eh->reactor(ACE_Reactor::instance());
 
     ACE_Reactor::instance()->register_handler(eh, ACE_Event_Handler::ACCEPT_MASK);
-    
     ACE_Reactor::instance()->run_reactor_event_loop();
-
+    return 0;
 }
